@@ -5,13 +5,16 @@
 <style>
 :root{font-family:Arial,sans-serif;color:#172033;background:#f5f7fb}*{box-sizing:border-box}body{margin:0;background:#f5f7fb}.wrap{max-width:1400px;margin:auto;padding:18px}.report-header{display:flex;align-items:center;gap:15px;background:linear-gradient(135deg,#1769e0,#0d4fa8);color:#fff;border-radius:18px;padding:18px 20px;margin-bottom:14px;box-shadow:0 8px 25px rgba(23,105,224,.18)}.brand-icon{width:58px;height:58px;border:3px solid #fff;border-radius:15px;display:grid;place-items:center;font-size:38px;font-weight:900}.brand{flex:1}.brand h1{margin:0;font-size:28px}.report-subtitle{font-size:17px;margin-top:4px;opacity:.92}.geoman-badge{display:inline-block;margin-left:8px;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.16);font-size:11px;font-weight:700}.file-status{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.25);border-radius:13px;padding:11px 13px}.file-name{font-weight:800}.status-pill{background:#dcfce7;color:#166534;padding:7px 10px;border-radius:999px;font-weight:800;font-size:12px}.box{background:#fff;border:1px solid #dfe5ef;border-radius:14px;padding:16px;margin:12px 0}button{border:0;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer}.primary{background:#1769e0;color:white}.muted{background:#eef2f7;color:#263247}input[type=file]{width:100%;padding:12px;border:1px dashed #aeb9ca;border-radius:10px;background:#fafbfd}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.small{font-size:12px;color:#6d7890}.hidden{display:none}.summary-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:12px 0}.summary-card{border:1px solid #dfe5ef;border-radius:13px;background:#fff;padding:13px;display:flex;align-items:center;gap:11px;min-height:92px}.summary-icon{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:23px;font-weight:900}.summary-card b{display:block;font-size:27px}.summary-card span:not(.summary-icon){display:block;font-size:13px;margin-top:4px}.blue .summary-icon{background:#1769e0}.green .summary-icon{background:#16a34a}.red .summary-icon{background:#ef233c}.orange .summary-icon{background:#f59e0b}.sky .summary-icon{background:#1683e8}.purple .summary-icon{background:#7c3aed}.report-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}.report-card{background:#fff;border:1px solid #dfe5ef;border-radius:14px;padding:12px;min-width:0;box-shadow:0 3px 14px rgba(15,23,42,.035)}.card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:10px}.card-head h2{margin:0;font-size:18px}.hint{margin:7px 2px 10px;color:#53617a;font-size:13px}.red-card .card-head{background:#fff0f2;color:#c81e2f}.orange-card .card-head{background:#fff6df;color:#b45309}.sky-card .card-head{background:#eaf5ff;color:#0867c9}.purple-card .card-head{background:#f2eaff;color:#6526cf}.count-badge{min-width:30px;text-align:center;border-radius:9px;padding:6px 9px;color:#fff;font-weight:800}.count-badge.red{background:#e52d3e}.count-badge.orange{background:#ed9500}.count-badge.sky{background:#2086e8}.count-badge.purple{background:#8140e8}.table-scroll{overflow:auto;border:1px solid #e3e8f0;border-radius:9px}table{width:100%;border-collapse:collapse;font-size:12px;min-width:650px}th,td{padding:8px 9px;border-bottom:1px solid #e8edf4;text-align:left;vertical-align:middle}th{background:#f4f7fb;font-weight:800;color:#263653;position:sticky;top:0;z-index:1}tbody tr:last-child td{border-bottom:0}.issue{color:#d61f35;background:#fff0f2;border-radius:7px;padding:5px 7px;font-weight:800;display:inline-block}.shift-pill{display:inline-block;padding:5px 8px;border-radius:7px;font-weight:800;margin:1px 2px}.am{background:#fff0bf;color:#a45a00}.pm{background:#dbeafe;color:#0756b8}.ov{background:#eadcff;color:#6826cc}.leave{background:#fee2e2;color:#b91c1c}.mission{max-width:230px}.empty-state{text-align:center;color:#64748b;padding:16px}.individual-card{margin-top:12px}.individual-head{background:#e9f8ee}.individual-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.individual-controls label{font-size:12px;font-weight:800}.individual-controls select{margin-left:5px;padding:8px 10px;border:1px solid #cfd8e6;border-radius:8px;background:#fff;font-weight:700}.person-stat{padding:7px 10px;border-radius:8px;background:#dbeafe;color:#1758a6;font-size:12px;font-weight:800}.danger-stat{background:#fee2e2;color:#b91c1c}.day-cell{min-width:100px}.day-cell .shift-pill{display:block;width:max-content}.mission-line{font-size:11px;color:#64748b;margin-top:2px}.status-ok{color:#15803d;font-weight:800}.status-bad{color:#c81e2f;font-weight:800}.geoman-fixed{position:fixed;left:50%;bottom:10px;transform:translateX(-50%);z-index:9999;pointer-events:none;font-size:14px;font-weight:700;letter-spacing:.6px;color:rgba(100,116,139,.42);background:rgba(255,255,255,.72);border:1px solid rgba(226,232,240,.55);border-radius:999px;padding:4px 10px;box-shadow:0 1px 5px rgba(15,23,42,.05);backdrop-filter:blur(3px)}@media(max-width:1000px){.summary-grid{grid-template-columns:repeat(3,1fr)}}@media(max-width:760px){.report-grid{grid-template-columns:1fr}.summary-grid{grid-template-columns:repeat(2,1fr)}.file-status{display:none}.brand h1{font-size:23px}.wrap{padding:10px}.individual-head{align-items:flex-start;flex-direction:column}}@media(max-width:460px){.summary-grid{grid-template-columns:1fr 1fr}.summary-card{min-height:80px;padding:10px}.summary-card b{font-size:22px}.summary-icon{width:37px;height:37px;font-size:19px}.card-head h2{font-size:16px}}
 </style>
+
+<style>
+.role-badge{display:inline-block;margin-top:2px;padding:2px 7px;border-radius:999px;background:#eaf2ff;color:#1769e0;font-size:11px;font-weight:800}
+.backup-role{background:#f0e9ff;color:#7040c8}
+</style>
 </head><body>
 <div class="wrap">
 <header class="report-header"><div class="brand-icon">✓</div><div class="brand"><h1>SAWA Weekly Schedule Checker</h1><div class="report-subtitle">Detailed Report <span class="geoman-badge">by geoman</span></div></div><div class="file-status"><div class="file-name" id="reportFile">No file checked</div><div class="status-pill" id="reportStatus">Waiting</div></div></header>
 <div class="box upload-box"><input id="file" type="file" accept=".xlsx,.xls"><div class="row" style="margin-top:12px"><button class="primary" id="checkBtn">Check Excel</button><button class="muted" id="clearBtn">Clear</button></div><div id="status" class="small" style="margin-top:10px"></div></div>
-<div id="autoRoleInfo" style="margin:8px 0 14px;padding:10px 14px;border-radius:10px;background:#eef6ff;color:#24527a;font-size:13px">
-Roles are detected automatically from the Excel sheet names: <b>MODERATORS WEEK</b> and <b>BACKUPTEAM WEEK</b>.
-</div><div id="results" class="hidden">
+<div id="results" class="hidden">
 <section class="summary-grid">
 <div class="summary-card blue"><span class="summary-icon">👥</span><div><b id="sumNames">0</b><span>Total Names</span></div></div>
 <div class="summary-card green"><span class="summary-icon">✓</span><div><b id="sumOk">0</b><span>Names OK<br>(Exactly 7 times)</span></div></div>
@@ -227,22 +230,46 @@ function emptyRow(msg,cols){return `<tr><td colspan="${cols}" class="empty-state
 
 function buildNameCounts(wb){
  const counts=new Map();
+
  for(const sheet of wb.SheetNames.filter(s=>/^(MODERATORS|BACKUPTEAM)\s+WEEK\s+\d+$/i.test(s))){
+  const role=/^MODERATORS/i.test(sheet)?"Moderator":"Backup";
+  const week=weekNum(sheet);
   const parsed=parseWeek(wb.Sheets[sheet]);
-  for(const day of DAYS){const d=parsed[day];if(!d)continue;
-   for(const items of Object.values(d.shifts))for(const item of items){
-    const k=norm(item.name);if(!k)continue;
-    if(!counts.has(k))counts.set(k,{name:item.name,count:0});
-    counts.get(k).count++;
+
+  for(const day of DAYS){
+   const d=parsed[day];if(!d)continue;
+   for(const items of Object.values(d.shifts||{})){
+    for(const item of items||[]){
+     const name=String(item.name||"").replace(/\s+/g," ").trim();
+     const k=norm(name);
+     if(!k)continue;
+
+     // CRITICAL: role is part of the key.
+     // The same person can be Moderator and Backup and must be counted
+     // independently in each role.
+     const key=role+"::"+k;
+
+     if(!counts.has(key)){
+      counts.set(key,{name,role,count:0,weeks:{}});
+     }
+     const p=counts.get(key);
+     p.count++;
+     p.weeks[week]=(p.weeks[week]||0)+1;
+    }
    }
   }
  }
- return [...counts.values()].sort((a,b)=>a.name.localeCompare(b.name,undefined,{sensitivity:"base"}));
+
+ return [...counts.values()].sort((a,b)=>
+   a.name.localeCompare(b.name,undefined,{sensitivity:"base"}) ||
+   a.role.localeCompare(b.role)
+ );
 }
+
 function renderNameIssues(counts){
  const bad=counts.filter(x=>x.count!==7);
  document.getElementById("badBadge").textContent=bad.length;
- document.getElementById("nameIssuesBody").innerHTML=bad.length?bad.map((x,i)=>`<tr><td>${i+1}</td><td><b>${esc(x.name)}</b></td><td><b class="danger">${x.count}</b></td><td><span class="issue">× ${x.count<7?"Less than 7":"More than 7"}</span></td></tr>`).join(""):emptyRow("✓ All names appear exactly 7 times.",4);
+ document.getElementById("nameIssuesBody").innerHTML=bad.length?bad.map((x,i)=>`<tr><td>${i+1}</td><td><b>${esc(x.name)}</b><br><small class="role-badge ${x.role==="Backup"?"backup-role":""}">${esc(x.role)}</small></td><td><b class="danger">${x.count}</b></td><td><span class="issue">× ${x.count<7?"Less than 7":"More than 7"}</span></td></tr>`).join(""):emptyRow("✓ All names appear exactly 7 times.",4);
 }
 function renderSame(rows){
  document.getElementById("sameBadge").textContent=rows.length;
@@ -265,82 +292,122 @@ function renderOv(rows){
   return `<tr><td>${i+1}</td><td><b>${esc(x.person)}</b></td><td>W${x.week}</td><td>${esc(x.day)}${x.date?" — "+esc(x.date):""}</td><td>${pill("OV")} ${pill("AM")}</td><td class="mission">${missions.map(esc).join("<br>")}</td><td><span class="issue">OV → AM</span></td></tr>`;
  }).join(""):emptyRow("✓ No OV → AM violations found.",7);
 }
-function collectPersonData(wb,name){
+function collectPersonData(wb,name,role){
  const rows=[];
- const sheets=wb.SheetNames.filter(s=>/^(MODERATORS|BACKUPTEAM)\s+WEEK\s+\d+$/i.test(s)).sort((a,b)=>weekNum(a)-weekNum(b));
+ const prefix=role==="Backup"?"BACKUPTEAM":"MODERATORS";
+ const sheets=wb.SheetNames
+   .filter(s=>new RegExp("^"+prefix+"\\s+WEEK\\s+\\d+$","i").test(s))
+   .sort((a,b)=>weekNum(a)-weekNum(b));
+
  for(const sheet of sheets){
-  const parsed=parseWeek(wb.Sheets[sheet]), days={}, week=weekNum(sheet);let weekCount=0;
-  for(const day of DAYS){days[day]=[];const d=parsed[day];if(!d)continue;
-   for(const [shift,items] of Object.entries(d.shifts))for(const item of items)if(norm(item.name)===norm(name)){days[day].push({shift,mission:item.mission||""});weekCount++;}
+  const parsed=parseWeek(wb.Sheets[sheet]),days={},week=weekNum(sheet);let weekCount=0;
+
+  for(const day of DAYS){
+   days[day]=[];
+   const d=parsed[day];if(!d)continue;
+
+   for(const [shift,items] of Object.entries(d.shifts||{})){
+    for(const item of items||[]){
+     if(norm(item.name)===norm(name)){
+      days[day].push({shift,mission:item.mission||""});
+      weekCount++;
+     }
+    }
+   }
   }
+
   rows.push({week,days,weekCount});
  }
  return rows;
 }
-function renderIndividual(name){
- const rows=collectPersonData(currentWorkbook,name);let total=0;rows.forEach(w=>total+=w.weekCount);
- const totalEl=document.getElementById("personTotal");totalEl.textContent=`Total Shifts: ${total}`;totalEl.className="person-stat "+(total===7?"":"danger-stat");
- document.getElementById("individualBody").innerHTML=rows.map(w=>`<tr><td><b>Week ${w.week}</b></td>${DAYS.map(day=>`<td class="day-cell">${(w.days[day]||[]).length?(w.days[day].map(x=>`${pill(x.shift)}${x.mission?`<div class="mission-line">${esc(x.mission)}</div>`:""}`).join("")):"-"}</td>`).join("")}<td class="mission">${[...new Set(DAYS.flatMap(d=>(w.days[d]||[]).map(x=>x.mission)).filter(Boolean))].map(esc).join("<br>")||"-"}</td><td class="${w.weekCount===7?"status-ok":"status-bad"}">${w.weekCount===7?"✓ OK":`⚠ ${w.weekCount} shifts`}</td></tr>`).join("")||emptyRow("No schedule found for this name.",10);
+
+function renderIndividual(name,role){
+ const rows=collectPersonData(currentWorkbook,name,role);
+ let total=0;rows.forEach(w=>total+=w.weekCount);
+
+ const totalEl=document.getElementById("personTotal");
+ totalEl.textContent=`Total Shifts: ${total}`;
+ totalEl.className="person-stat "+(total===7?"":"danger-stat");
+
+ const roleEl=document.getElementById("personRole");
+ if(roleEl)roleEl.textContent=role;
+
+ document.getElementById("individualBody").innerHTML=rows.map(w=>
+  `<tr><td><b>Week ${w.week}</b></td>`+
+  DAYS.map(day=>
+    `<td class="day-cell">${
+      (w.days[day]||[]).length
+      ? w.days[day].map(x=>`${pill(x.shift)}${x.mission?`<div class="mission-line">${esc(x.mission)}</div>`:""}`).join("")
+      : "-"
+    }</td>`
+  ).join("")+
+  `<td class="mission">${
+    [...new Set(DAYS.flatMap(d=>(w.days[d]||[]).map(x=>x.mission)).filter(Boolean))]
+      .map(esc).join("<br>")||"-"
+  }</td>`+
+  `<td class="${w.weekCount===7?"status-ok":"status-bad"}">${
+    w.weekCount===7?"✓ OK":`⚠ ${w.weekCount} shifts`
+  }</td></tr>`
+ ).join("")||emptyRow("No schedule found for this name.",10);
 }
+
 function setupPeople(counts){
- const sel=document.getElementById("personSelect");currentPeople=counts.map(x=>x.name);sel.innerHTML=currentPeople.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join("");if(currentPeople.length)renderIndividual(currentPeople[0]);sel.onchange=()=>renderIndividual(sel.value);
-}
+ const sel=document.getElementById("personSelect");
+ currentPeople=counts.map(x=>({name:x.name,role:x.role}));
 
-function getSheetRole(sheetName){
-  const s=String(sheetName||"").trim().toUpperCase();
-  if(/^MODERATORS\s+WEEK\s+\d+$/.test(s)) return "Moderator";
-  if(/^BACKUPTEAM\s+WEEK\s+\d+$/.test(s)) return "Backup";
-  return null;
-}
+ sel.innerHTML=currentPeople.map((p,i)=>
+   `<option value="${i}">${esc(p.name)} — ${esc(p.role)}</option>`
+ ).join("");
 
-function buildAutoRoleMap(wb){
-  const map=new Map();
-  wb.SheetNames.forEach(sheet=>{
-    const role=getSheetRole(sheet);
-    if(!role) return;
-    const parsed=parseWeek(wb.Sheets[sheet]);
-    const names=new Set();
-    for(const day of DAYS){
-      const d=parsed[day];
-      if(!d) continue;
-      for(const items of Object.values(d.shifts||{})){
-        for(const item of items||[]){
-          const name=norm(item.name);
-          if(name) names.add(name);
-        }
-      }
-    }
-    names.forEach(name=>{
-      if(!map.has(name)) map.set(name,role);
-      else if(map.get(name)!==role) map.set(name,"Mixed");
-    });
-  });
-  return map;
-}
+ if(currentPeople.length)renderIndividual(currentPeople[0].name,currentPeople[0].role);
 
-function roleLabel(role){
-  if(role==="Moderator") return "Moderator";
-  if(role==="Backup") return "Backup";
-  if(role==="Mixed") return "Moderator / Backup";
-  return "";
+ sel.onchange=()=>{
+   const p=currentPeople[Number(sel.value)];
+   if(p)renderIndividual(p.name,p.role);
+ };
 }
-
 checkBtn.onclick=async()=>{
- const f=file.files[0];if(!f){status.textContent="Choose an Excel file first.";return}
+ const f=file.files[0];
+ if(!f){status.textContent="Choose an Excel file first.";return}
+
  try{
-  status.textContent="Reading and checking…";const wb=XLSX.read(await f.arrayBuffer(),{cellDates:true});currentWorkbook=wb;
-  const all=[...scanTeam(wb,"MODERATORS"),...scanTeam(wb,"BACKUPTEAM")],counts=buildNameCounts(wb);
-  const same=all.filter(x=>x.type==="SAME DAY"),leave=all.filter(x=>x.type==="WORK+LEAVE"),ov=all.filter(x=>x.type==="OV→AM");
-  document.getElementById("sumNames").textContent=counts.length;document.getElementById("sumOk").textContent=counts.filter(x=>x.count===7).length;document.getElementById("sumBad").textContent=counts.filter(x=>x.count!==7).length;document.getElementById("sumSame").textContent=same.length;document.getElementById("sumLeave").textContent=leave.length;document.getElementById("sumOv").textContent=ov.length;
-  renderNameIssues(counts);renderSame(same);renderLeave(leave);renderOv(ov);setupPeople(counts);
-  document.getElementById("reportFile").textContent=f.name;document.getElementById("reportStatus").textContent="Completed";results.classList.remove("hidden");status.textContent=`Checked ${f.name} — ${wb.SheetNames.length} sheets.`;window.scrollTo({top:results.offsetTop-10,behavior:"smooth"});
- }catch(e){console.error(e);status.textContent="Could not read this Excel file: "+e.message}
+  status.textContent="Reading and checking…";
+  const wb=XLSX.read(await f.arrayBuffer(),{cellDates:true});
+  currentWorkbook=wb;
+
+  // Every sheet determines its own role:
+  // MODERATORS WEEK N -> Moderator
+  // BACKUPTEAM WEEK N -> Backup
+  const all=[...scanTeam(wb,"MODERATORS"),...scanTeam(wb,"BACKUPTEAM")];
+  const counts=buildNameCounts(wb);
+
+  const same=all.filter(x=>x.type==="SAME DAY");
+  const leave=all.filter(x=>x.type==="WORK+LEAVE");
+  const ov=all.filter(x=>x.type==="OV→AM");
+
+  document.getElementById("sumNames").textContent=counts.length;
+  document.getElementById("sumOk").textContent=counts.filter(x=>x.count===7).length;
+  document.getElementById("sumBad").textContent=counts.filter(x=>x.count!==7).length;
+  document.getElementById("sumSame").textContent=same.length;
+  document.getElementById("sumLeave").textContent=leave.length;
+  document.getElementById("sumOv").textContent=ov.length;
+
+  renderNameIssues(counts);
+  renderSame(same);
+  renderLeave(leave);
+  renderOv(ov);
+  setupPeople(counts);
+
+  document.getElementById("reportFile").textContent=f.name;
+  document.getElementById("reportStatus").textContent="Completed";
+  results.classList.remove("hidden");
+  status.textContent=`Checked ${f.name} — ${wb.SheetNames.length} sheets.`;
+  window.scrollTo({top:results.offsetTop-10,behavior:"smooth"});
+ }catch(e){
+  console.error(e);
+  status.textContent="Could not read this Excel file: "+e.message;
+ }
 };
 clearBtn.onclick=()=>{file.value="";results.classList.add("hidden");status.textContent="";currentWorkbook=null;document.getElementById("reportFile").textContent="No file checked";document.getElementById("reportStatus").textContent="Waiting"};
 </script>
-<script>
-function autoRoleForName(name){
-  const key=norm(name);
-  return roleLabel((window.__sawaAutoRoleMap||new Map()).get(key)||"");
-}
-</script></body></html>
+</body></html>
