@@ -82,7 +82,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:9px;borde
 <h1>SAWA Weekly Schedule Checker<span class="geoman-badge">by geoman</span></h1>
 <div class="pwa-install-wrap">
   <button id="installBtn" class="install-btn" type="button">Install SAWA Weekly Checker</button>
-  <div id="installHint" class="install-hint"></div>
+  <div id="installHint" class="install-hint">Install works when the PWA files are deployed together over HTTPS.</div>
 </div>
 
 <div class="sub">Upload the Excel schedule. It checks every WEEK sheet for duplicate shifts, work + leave, and OV → AM.</div>
@@ -319,44 +319,71 @@ let deferredInstallPrompt = null;
 const installBtn = document.getElementById("installBtn");
 const installHint = document.getElementById("installHint");
 
-function isStandalone(){
+function isInstalled(){
   return window.matchMedia("(display-mode: standalone)").matches ||
+         window.matchMedia("(display-mode: fullscreen)").matches ||
          window.navigator.standalone === true;
 }
 
-window.addEventListener("beforeinstallprompt", (e) => {
-  e.preventDefault();
-  deferredInstallPrompt = e;
-  if (installBtn) installBtn.style.display = "inline-block";
-  if (installHint) installHint.textContent = "Install the checker on this device for quick access.";
+function updateInstallUI(){
+  if (!installBtn) return;
+  if (isInstalled()){
+    installBtn.style.display = "none";
+    if (installHint) installHint.textContent = "SAWA Weekly Checker is installed.";
+  } else {
+    installBtn.style.display = "inline-block";
+  }
+}
+
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  updateInstallUI();
 });
 
 window.addEventListener("appinstalled", () => {
   deferredInstallPrompt = null;
   if (installBtn) installBtn.style.display = "none";
-  if (installHint) installHint.textContent = "SAWA is installed on this device.";
+  if (installHint) installHint.textContent = "SAWA Weekly Checker installed successfully.";
 });
 
-if (isStandalone()) {
-  installBtn.style.display = "none";
-} else {
-  installBtn.style.display = "inline-block";
-}
-
-installBtn.addEventListener("click", async () => {
-  if (deferredInstallPrompt) {
+async function showInstall(){
+  if (deferredInstallPrompt){
     deferredInstallPrompt.prompt();
-    await deferredInstallPrompt.userChoice;
+    const choice = await deferredInstallPrompt.userChoice;
     deferredInstallPrompt = null;
+    if (choice.outcome === "accepted"){
+      if (installHint) installHint.textContent = "Installing SAWA Weekly Checker…";
+    } else {
+      if (installHint) installHint.textContent = "Installation cancelled.";
+    }
     return;
   }
-  installHint.textContent =
-    "If no install window appears, use your browser menu and choose “Install app” or “Add to Home screen”.";
-});
 
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js").catch(() => {});
+  // Native prompt is not available. Give the user the correct browser action.
+  const ua = navigator.userAgent.toLowerCase();
+  let message;
+  if (ua.includes("android")){
+    message = "To install: open the browser menu (⋮) and choose “Install app” or “Add to Home screen”.";
+  } else if (ua.includes("iphone") || ua.includes("ipad")){
+    message = "To install: tap Share → Add to Home Screen.";
+  } else {
+    message = "To install: use your browser menu and choose “Install SAWA Weekly Checker” or “Install app”.";
+  }
+  if (installHint) installHint.textContent = message;
+}
+
+installBtn.addEventListener("click", showInstall);
+updateInstallUI();
+
+if ("serviceWorker" in navigator && location.protocol === "https:"){
+  window.addEventListener("load", async () => {
+    try {
+      await navigator.serviceWorker.register("./sw.js", {scope:"./"});
+    } catch(e) {
+      if (installHint) installHint.textContent =
+        "Install is unavailable until the PWA files are deployed together.";
+    }
   });
 }
 </script>
