@@ -9,7 +9,9 @@
 <div class="wrap">
 <header class="report-header"><div class="brand-icon">✓</div><div class="brand"><h1>SAWA Weekly Schedule Checker</h1><div class="report-subtitle">Detailed Report <span class="geoman-badge">by geoman</span></div></div><div class="file-status"><div class="file-name" id="reportFile">No file checked</div><div class="status-pill" id="reportStatus">Waiting</div></div></header>
 <div class="box upload-box"><input id="file" type="file" accept=".xlsx,.xls"><div class="row" style="margin-top:12px"><button class="primary" id="checkBtn">Check Excel</button><button class="muted" id="clearBtn">Clear</button></div><div id="status" class="small" style="margin-top:10px"></div></div>
-<div id="results" class="hidden">
+<div id="autoRoleInfo" style="margin:8px 0 14px;padding:10px 14px;border-radius:10px;background:#eef6ff;color:#24527a;font-size:13px">
+Roles are detected automatically from the Excel sheet names: <b>MODERATORS WEEK</b> and <b>BACKUPTEAM WEEK</b>.
+</div><div id="results" class="hidden">
 <section class="summary-grid">
 <div class="summary-card blue"><span class="summary-icon">👥</span><div><b id="sumNames">0</b><span>Total Names</span></div></div>
 <div class="summary-card green"><span class="summary-icon">✓</span><div><b id="sumOk">0</b><span>Names OK<br>(Exactly 7 times)</span></div></div>
@@ -283,6 +285,46 @@ function renderIndividual(name){
 function setupPeople(counts){
  const sel=document.getElementById("personSelect");currentPeople=counts.map(x=>x.name);sel.innerHTML=currentPeople.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join("");if(currentPeople.length)renderIndividual(currentPeople[0]);sel.onchange=()=>renderIndividual(sel.value);
 }
+
+function getSheetRole(sheetName){
+  const s=String(sheetName||"").trim().toUpperCase();
+  if(/^MODERATORS\s+WEEK\s+\d+$/.test(s)) return "Moderator";
+  if(/^BACKUPTEAM\s+WEEK\s+\d+$/.test(s)) return "Backup";
+  return null;
+}
+
+function buildAutoRoleMap(wb){
+  const map=new Map();
+  wb.SheetNames.forEach(sheet=>{
+    const role=getSheetRole(sheet);
+    if(!role) return;
+    const parsed=parseWeek(wb.Sheets[sheet]);
+    const names=new Set();
+    for(const day of DAYS){
+      const d=parsed[day];
+      if(!d) continue;
+      for(const items of Object.values(d.shifts||{})){
+        for(const item of items||[]){
+          const name=norm(item.name);
+          if(name) names.add(name);
+        }
+      }
+    }
+    names.forEach(name=>{
+      if(!map.has(name)) map.set(name,role);
+      else if(map.get(name)!==role) map.set(name,"Mixed");
+    });
+  });
+  return map;
+}
+
+function roleLabel(role){
+  if(role==="Moderator") return "Moderator";
+  if(role==="Backup") return "Backup";
+  if(role==="Mixed") return "Moderator / Backup";
+  return "";
+}
+
 checkBtn.onclick=async()=>{
  const f=file.files[0];if(!f){status.textContent="Choose an Excel file first.";return}
  try{
@@ -296,4 +338,9 @@ checkBtn.onclick=async()=>{
 };
 clearBtn.onclick=()=>{file.value="";results.classList.add("hidden");status.textContent="";currentWorkbook=null;document.getElementById("reportFile").textContent="No file checked";document.getElementById("reportStatus").textContent="Waiting"};
 </script>
-</body></html>
+<script>
+function autoRoleForName(name){
+  const key=norm(name);
+  return roleLabel((window.__sawaAutoRoleMap||new Map()).get(key)||"");
+}
+</script></body></html>
