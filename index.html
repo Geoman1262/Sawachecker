@@ -64,29 +64,9 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:9px;borde
   backdrop-filter:blur(3px);
 }
 </style>
-
-<style>
-.install-wrap{margin:10px 0 14px}
-.install-btn{border:0;border-radius:10px;padding:11px 17px;background:#1769e0;color:#fff;font-size:15px;font-weight:800;cursor:pointer}
-.install-btn:active{transform:scale(.98)}
-.install-modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.48);z-index:9999;padding:20px;align-items:center;justify-content:center}
-.install-modal.show{display:flex}
-.install-card{position:relative;width:min(440px,100%);background:#fff;border-radius:20px;padding:25px 21px 20px;box-shadow:0 20px 60px rgba(0,0,0,.25);font-family:inherit}
-.install-card h2{margin:0 35px 8px 0;font-size:23px;color:#172033}
-.install-intro{margin:0 0 17px;color:#64748b;line-height:1.5}
-.install-step{background:#f5f7fb;border:1px solid #e2e8f0;border-radius:14px;padding:14px;margin:10px 0}
-.step-title{font-weight:800;color:#172033;margin-bottom:7px}
-.step-text{color:#475569;line-height:1.55;font-size:14px}
-.install-close{position:absolute;right:13px;top:9px;border:0;background:transparent;font-size:30px;line-height:1;color:#64748b;cursor:pointer}
-.install-ok{width:100%;border:0;border-radius:11px;padding:12px;background:#1769e0;color:#fff;font-size:15px;font-weight:800;margin-top:8px;cursor:pointer}
-</style>
 </head>
 <body><div class="wrap">
 <h1>SAWA Weekly Schedule Checker<span class="geoman-badge">by geoman</span></h1>
-<div class="install-wrap">
-  <button id="installBtn" class="install-btn" type="button">Install SAWA Weekly Checker</button>
-</div>
-
 <div class="sub">Upload the Excel schedule. It checks every WEEK sheet for duplicate shifts, work + leave, and OV → AM.</div>
 <div class="box">
 <input id="file" type="file" accept=".xlsx,.xls">
@@ -293,6 +273,68 @@ function renderWeekPicker(wb){
 }
 function selectedWeeks(){return [...document.querySelectorAll(".weekChoice:checked")].map(x=>+x.value);}
 
+
+function scanNameCounts(wb,prefix){
+ const sheets=wb.SheetNames
+   .filter(s=>new RegExp("^"+prefix+"\\s+WEEK\\s+\\d+$","i").test(s))
+   .sort((a,b)=>weekNum(a)-weekNum(b));
+ const issues=[];
+ for(const sheet of sheets){
+   const parsed=parseWeek(wb.Sheets[sheet]);
+   const counts=new Map();
+   for(const day of DAYS){
+     const d=parsed[day];
+     if(!d)continue;
+     for(const items of Object.values(d.shifts)){
+       for(const item of items){
+         const key=norm(item.name);
+         if(!key)continue;
+         if(!counts.has(key))counts.set(key,{name:item.name,count:0});
+         counts.get(key).count++;
+       }
+     }
+   }
+   for(const x of counts.values()){
+     if(x.count!==7){
+       issues.push({
+         team:teamName(prefix),
+         week:weekNum(sheet),
+         name:x.name,
+         count:x.count
+       });
+     }
+   }
+ }
+ return issues;
+}
+
+function renderNameCountCheck(issues){
+ const old=document.getElementById("nameCountResults");
+ if(old)old.remove();
+
+ const box=document.createElement("div");
+ box.id="nameCountResults";
+ box.style.cssText="margin-top:14px;padding:16px;border:1px solid #dbe3ef;border-radius:12px;background:#fff";
+
+ if(!issues.length){
+   box.innerHTML='<div style="font-weight:800;color:#16803c;font-size:16px">✓ Name Count Check</div><div style="margin-top:6px">All names appear exactly 7 times.</div>';
+ }else{
+   box.innerHTML='<div style="font-weight:800;color:#b42318;font-size:16px">⚠ Name Count Check</div>'+
+     '<div style="margin:6px 0 10px;color:#475569">Names appearing fewer or more than 7 times:</div>'+
+     '<div>'+issues.map(x=>
+       `<div style="display:flex;justify-content:space-between;gap:12px;padding:9px 10px;margin-top:5px;background:#f8fafc;border-radius:8px">
+          <span><b>${escapeHtml(x.name)}</b> <span style="color:#64748b">(${x.team} — Week ${x.week})</span></span>
+          <b style="white-space:nowrap">${x.count} times</b>
+        </div>`).join("")+
+     '</div>';
+ }
+ tableWrap.parentElement.appendChild(box);
+}
+
+function escapeHtml(v){
+ return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+}
+
 checkBtn.onclick=async()=>{
  const f=file.files[0];if(!f){status.textContent="Choose an Excel file first.";return}
  try{status.textContent="Reading and checking…";const wb=XLSX.read(await f.arrayBuffer(),{cellDates:true});
@@ -311,44 +353,16 @@ tableWrap.innerHTML=all.length
    </div>`).join("")}
  </div>`).join("")}</div>`
  : '<div class="ok" style="padding:18px;border:1px solid #b7e0c2;border-radius:12px;background:#f3fff6"><b>✓ No conflicts found.</b></div>';
-results.classList.remove("hidden");status.textContent=`Checked ${f.name} — ${wb.SheetNames.length} sheets.`;
+results.classList.remove("hidden");
+ const nameIssues=[...scanNameCounts(wb,"MODERATORS"),...scanNameCounts(wb,"BACKUPTEAM")];
+ renderNameCountCheck(nameIssues);
+ status.textContent=`Checked ${f.name} — ${wb.SheetNames.length} sheets.`;
  }catch(e){console.error(e);status.textContent="Could not read this Excel file: "+e.message}
 };
-clearBtn.onclick=()=>{file.value="";results.classList.add("hidden");status.textContent=""};
-</script><div class="geoman-fixed">geoman</div>
-<div id="installModal" class="install-modal" aria-hidden="true">
-  <div class="install-card" role="dialog" aria-modal="true" aria-labelledby="installTitle">
-    <button id="closeInstall" class="install-close" type="button" aria-label="Close">×</button>
-    <h2 id="installTitle">Install SAWA Weekly Checker</h2>
-    <p class="install-intro">Install it on your device for quick access from your Home Screen.</p>
-
-    <div class="install-step">
-      <div class="step-title">📱 Android — Chrome</div>
-      <div class="step-text">1. Press <b>⋮</b> at the top-right of Chrome.<br>
-      2. Choose <b>Install app</b> or <b>Add to Home screen</b>.<br>
-      3. Confirm the installation.</div>
-    </div>
-
-    <div class="install-step">
-      <div class="step-title">💻 Computer — Chrome / Edge</div>
-      <div class="step-text">Look for the <b>Install</b> icon near the address bar, then confirm.</div>
-    </div>
-
-    <button id="closeInstall2" class="install-ok" type="button">Got it</button>
-  </div>
-</div>
-
-<script>
-(function(){
-  const modal=document.getElementById('installModal');
-  const open=document.getElementById('installBtn');
-  const close1=document.getElementById('closeInstall');
-  const close2=document.getElementById('closeInstall2');
-  function hide(){modal.classList.remove('show');modal.setAttribute('aria-hidden','true');}
-  open.addEventListener('click',function(){modal.classList.add('show');modal.setAttribute('aria-hidden','false');});
-  close1.addEventListener('click',hide);
-  close2.addEventListener('click',hide);
-  modal.addEventListener('click',function(e){if(e.target===modal) hide();});
-})();
-</script>
-</body></html>
+clearBtn.onclick=()=>{
+ file.value="";
+ results.classList.add("hidden");
+ const n=document.getElementById("nameCountResults");if(n)n.remove();
+ status.textContent="";
+};
+</script><div class="geoman-fixed">geoman</div></body></html>
