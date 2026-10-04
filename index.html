@@ -31,7 +31,7 @@
 <div class="report-card sky-card"><div class="card-head"><h2>Work + Leave Conflicts</h2><span class="count-badge sky" id="leaveBadge">0</span></div><p class="hint">A person has a work shift and leave on the same date.</p><div class="table-scroll"><table><thead><tr><th>#</th><th>Name</th><th>Week</th><th>Date</th><th>Shift</th><th>Mission</th><th>Leave</th><th>Issue</th></tr></thead><tbody id="leaveBody"></tbody></table></div></div>
 <div class="report-card purple-card"><div class="card-head"><h2>OV → AM Violations</h2><span class="count-badge purple" id="ovBadge">0</span></div><p class="hint">Overnight shift followed by Morning shift the next day.</p><div class="table-scroll"><table><thead><tr><th>#</th><th>Name</th><th>Week</th><th>Dates</th><th>Shifts</th><th>Mission(s)</th><th>Issue</th></tr></thead><tbody id="ovBody"></tbody></table></div></div>
 </section>
-<section class="report-card individual-card"><div class="card-head individual-head"><div><h2>Individual Schedule &amp; Missions</h2><p class="hint">Select a name to view the full schedule, shifts and missions.</p></div><div class="individual-controls"><label>Select Name <select id="personSelect"></select></label><span class="person-stat danger-stat" id="personTotal">Total Shifts: 0</span><span class="person-stat" id="personExpected">Expected: 7</span></div></div><div class="table-scroll"><table class="individual-table"><thead><tr><th>Week</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th><th>Sun</th><th>Mission / Task</th><th>Status</th></tr></thead><tbody id="individualBody"></tbody></table></div></section>
+<section class="report-card individual-card"><div class="card-head individual-head"><div><h2>Individual Schedule &amp; Missions</h2><p class="hint">Select a name to view the full schedule, shifts and missions.</p></div><div class="individual-controls"><label>Select Name <select id="personSelect"></select></label><span class="person-stat danger-stat" id="personTotal">Total Shifts: 0</span><span class="person-stat" id="personExpected">Expected: 7</span></div></div><div class="table-scroll"><table class="individual-table"><thead><tr><th>Week</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th><th>Sun</th><th>Status</th></tr></thead><tbody id="individualBody"></tbody></table></div></section>
 </div></div><div class="geoman-fixed">geoman</div>
 
 <script>
@@ -337,18 +337,14 @@ function renderIndividual(name,role){
   DAYS.map(day=>
     `<td class="day-cell">${
       (w.days[day]||[]).length
-      ? w.days[day].map(x=>`${pill(x.shift)}${x.mission?`<div class="mission-line">${esc(x.mission)}</div>`:""}`).join("")
+      ? w.days[day].map(x=>`${pill(x.shift)}`).join("")
       : "-"
     }</td>`
-  ).join("")+
-  `<td class="mission">${
-    [...new Set(DAYS.flatMap(d=>(w.days[d]||[]).map(x=>x.mission)).filter(Boolean))]
-      .map(esc).join("<br>")||"-"
-  }</td>`+
+  ).join("")
   `<td class="${w.weekCount===7?"status-ok":"status-bad"}">${
     w.weekCount===7?"✓ OK":`⚠ ${w.weekCount} shifts`
   }</td></tr>`
- ).join("")||emptyRow("No schedule found for this name.",10);
+ ).join("")||emptyRow("No schedule found for this name.",9);
 }
 
 function setupPeople(counts){
