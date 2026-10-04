@@ -326,26 +326,33 @@ function renderIndividual(name,role){
  let total=0;rows.forEach(w=>total+=w.weekCount);
 
  const totalEl=document.getElementById("personTotal");
- totalEl.textContent=`Total Shifts: ${total}`;
- totalEl.className="person-stat "+(total===7?"":"danger-stat");
+ if(totalEl){
+   totalEl.textContent=`Total Shifts: ${total}`;
+   totalEl.className="person-stat "+(total===7?"":"danger-stat");
+ }
 
  const roleEl=document.getElementById("personRole");
  if(roleEl)roleEl.textContent=role;
 
- document.getElementById("individualBody").innerHTML=rows.map(w=>
-  `<tr><td><b>Week ${w.week}</b></td>`+
-  DAYS.map(day=>
-    `<td class="day-cell">${
-      (w.days[day]||[]).length
-      ? w.days[day].map(x=>`${pill(x.shift)}`).join("")
-      : "-"
-    }</td>`
-  ).join("")
-  `<td class="${w.weekCount===7?"status-ok":"status-bad"}">${
-    w.weekCount===7?"✓ OK":`⚠ ${w.weekCount} shifts`
-  }</td></tr>`
- ).join("")||emptyRow("No schedule found for this name.",9);
+ const body=document.getElementById("individualBody");
+ if(!body)return;
+
+ body.innerHTML=rows.map(w=>{
+   const cells=DAYS.map(day=>{
+     const items=w.days[day]||[];
+     return `<td class="day-cell">${
+       items.length
+       ? items.map(x=>pill(x.shift)).join("")
+       : "-"
+     }</td>`;
+   }).join("");
+
+   return `<tr><td><b>Week ${w.week}</b></td>${cells}<td class="${w.weekCount===7?"status-ok":"status-bad"}">${
+     w.weekCount===7?"✓ OK":`⚠ ${w.weekCount} shifts`
+   }</td></tr>`;
+ }).join("") || emptyRow("No schedule found for this name.",9);
 }
+
 
 function setupPeople(counts){
  const sel=document.getElementById("personSelect");
