@@ -63,7 +63,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:9px;borde
   box-shadow:0 1px 5px rgba(15,23,42,.05);
   backdrop-filter:blur(3px);
 }
-.pwa-install-wrap{margin:10px 0 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}.install-btn{border:0;border-radius:10px;padding:10px 15px;background:#1769e0;color:#fff;font-size:14px;font-weight:800;cursor:pointer}.install-btn[disabled]{opacity:.55;cursor:not-allowed}.install-status{font-size:12px;color:#64748b}</style>
+.pwa-install-wrap{margin:10px 0 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}.install-btn{border:0;border-radius:10px;padding:10px 15px;background:#1769e0;color:#fff;font-size:14px;font-weight:800;cursor:pointer}.install-status{font-size:12px;color:#64748b}</style>
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#1769e0">
 <meta name="mobile-web-app-capable" content="yes">
@@ -306,47 +306,44 @@ results.classList.remove("hidden");status.textContent=`Checked ${f.name} — ${w
 };
 clearBtn.onclick=()=>{file.value="";results.classList.add("hidden");status.textContent=""};
 </script><div class="geoman-fixed">geoman</div><script>
-(function(){
-  let deferredPrompt=null;
-  const btn=document.getElementById("installBtn");
-  const status=document.getElementById("installStatus");
+(() => {
+  let installEvent = null;
+  const btn = document.getElementById("installBtn");
+  const status = document.getElementById("installStatus");
+  const standalone = () =>
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.matchMedia("(display-mode: fullscreen)").matches ||
+    window.navigator.standalone === true;
 
-  function standalone(){
-    return window.matchMedia("(display-mode: standalone)").matches ||
-           window.matchMedia("(display-mode: fullscreen)").matches ||
-           window.navigator.standalone===true;
+  if (standalone()) {
+    btn.style.display = "none";
+    return;
   }
 
-  if(standalone()){
-    btn.style.display="none";
-  }else{
-    btn.disabled=true;
-    status.textContent="Preparing install…";
-  }
-
-  window.addEventListener("beforeinstallprompt",function(e){
+  window.addEventListener("beforeinstallprompt", e => {
     e.preventDefault();
-    deferredPrompt=e;
-    btn.disabled=false;
-    status.textContent="";
+    installEvent = e;
   });
 
-  window.addEventListener("appinstalled",function(){
-    deferredPrompt=null;
-    btn.style.display="none";
-    status.textContent="";
+  window.addEventListener("appinstalled", () => {
+    installEvent = null;
+    btn.style.display = "none";
+    status.textContent = "";
   });
 
-  btn.addEventListener("click",async function(){
-    if(!deferredPrompt) return;
-    const promptEvent=deferredPrompt;
-    deferredPrompt=null;
-    await promptEvent.prompt();
-    await promptEvent.userChoice;
+  btn.addEventListener("click", async () => {
+    if (!installEvent) {
+      status.textContent = "Install is not available from this browser yet.";
+      return;
+    }
+    const e = installEvent;
+    installEvent = null;
+    await e.prompt();
+    await e.userChoice;
   });
 
-  if("serviceWorker" in navigator && location.protocol==="https:"){
-    navigator.serviceWorker.register("/sw.js",{scope:"/"});
+  if ("serviceWorker" in navigator && location.protocol === "https:") {
+    navigator.serviceWorker.register("/sw.js", {scope:"/"}).catch(() => {});
   }
 })();
 </script></body></html>
