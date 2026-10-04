@@ -63,10 +63,28 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:9px;borde
   box-shadow:0 1px 5px rgba(15,23,42,.05);
   backdrop-filter:blur(3px);
 }
+
+.pwa-install-wrap{margin:10px 0 8px}
+.install-btn{border:0;border-radius:10px;padding:10px 16px;background:#1769e0;color:#fff;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 3px 10px rgba(23,105,224,.18)}
+.install-btn:hover{filter:brightness(.96)}
+.install-hint{font-size:12px;color:#64748b;margin-top:6px;max-width:520px;line-height:1.45}
 </style>
+
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#1769e0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="SAWA Checker">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
 </head>
 <body><div class="wrap">
 <h1>SAWA Weekly Schedule Checker<span class="geoman-badge">by geoman</span></h1>
+<div class="pwa-install-wrap">
+  <button id="installBtn" class="install-btn" type="button">Install SAWA Weekly Checker</button>
+  <div id="installHint" class="install-hint"></div>
+</div>
+
 <div class="sub">Upload the Excel schedule. It checks every WEEK sheet for duplicate shifts, work + leave, and OV → AM.</div>
 <div class="box">
 <input id="file" type="file" accept=".xlsx,.xls">
@@ -295,4 +313,51 @@ results.classList.remove("hidden");status.textContent=`Checked ${f.name} — ${w
  }catch(e){console.error(e);status.textContent="Could not read this Excel file: "+e.message}
 };
 clearBtn.onclick=()=>{file.value="";results.classList.add("hidden");status.textContent=""};
-</script><div class="geoman-fixed">geoman</div></body></html>
+</script><div class="geoman-fixed">geoman</div>
+<script>
+let deferredInstallPrompt = null;
+const installBtn = document.getElementById("installBtn");
+const installHint = document.getElementById("installHint");
+
+function isStandalone(){
+  return window.matchMedia("(display-mode: standalone)").matches ||
+         window.navigator.standalone === true;
+}
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  if (installBtn) installBtn.style.display = "inline-block";
+  if (installHint) installHint.textContent = "Install the checker on this device for quick access.";
+});
+
+window.addEventListener("appinstalled", () => {
+  deferredInstallPrompt = null;
+  if (installBtn) installBtn.style.display = "none";
+  if (installHint) installHint.textContent = "SAWA is installed on this device.";
+});
+
+if (isStandalone()) {
+  installBtn.style.display = "none";
+} else {
+  installBtn.style.display = "inline-block";
+}
+
+installBtn.addEventListener("click", async () => {
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    return;
+  }
+  installHint.textContent =
+    "If no install window appears, use your browser menu and choose “Install app” or “Add to Home screen”.";
+});
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(() => {});
+  });
+}
+</script>
+</body></html>
