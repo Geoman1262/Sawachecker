@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SAWA Weekly Schedule Checker</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{font-family:Arial,sans-serif;color:#172033;background:#f5f7fb}*{box-sizing:border-box}body{margin:0}.wrap{max-width:1100px;margin:auto;padding:18px}
+h1{margin:0 0 6px}.sub{color:#65708a;margin-bottom:18px}.box{background:#fff;border:1px solid #dfe5ef;border-radius:14px;padding:16px;margin:12px 0}
+button{border:0;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer}.primary{background:#1769e0;color:white}.muted{background:#eef2f7;color:#263247}
+input[type=file]{width:100%;padding:12px;border:1px dashed #aeb9ca;border-radius:10px;background:#fafbfd}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.card{border:1px solid #e1e6ef;border-radius:12px;padding:13px;background:#fbfcfe}.num{font-size:25px;font-weight:800}.danger{color:#c62828}.ok{color:#17833b}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:9px;border-bottom:1px solid #e7ebf1;text-align:left;vertical-align:top}th{background:#f5f7fb}
+.err{background:#fff5f5}.warn{background:#fffaf0}.hidden{display:none}.pill{display:inline-block;padding:4px 8px;border-radius:99px;background:#eef2f7;font-size:12px;font-weight:700}.small{font-size:12px;color:#6d7890}
+@media(max-width:700px){.cards{grid-template-columns:repeat(2,1fr)}table{font-size:12px}}
+.weekbox{display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid #dfe5ef;border-radius:9px;background:#fafbfd}.weekbox input{accent-color:#1769e0}
+
+.creator-credit{font-size:13px;font-weight:700;letter-spacing:.4px;margin:8px 0 12px;opacity:.72}
+.footer-credit{text-align:center;padding:22px 12px 30px;font-size:13px;font-weight:700;letter-spacing:.5px;opacity:.65}
+
+
+.geoman-badge{
+  display:inline-block;
+  margin-left:10px;
+  padding:5px 9px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.3px;
+  vertical-align:middle;
+  color:#64748b;
+  background:#f1f5f9;
+  border:1px solid #e2e8f0;
+}
+@media(max-width:600px){
+  .geoman-badge{display:block;width:max-content;margin:8px 0 0;font-size:11px}
+}
+
+.geoman-footer{
+  text-align:center;
+  padding:18px 10px 28px;
+  color:#94a3b8;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.5px;
+}
+
+.geoman-fixed{
+  position:fixed;
+  left:50%;
+  bottom:10px;
+  transform:translateX(-50%);
+  z-index:9999;
+  pointer-events:none;
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:.6px;
+  color:rgba(100,116,139,.42);
+  background:rgba(255,255,255,.72);
+  border:1px solid rgba(226,232,240,.55);
+  border-radius:999px;
+  padding:4px 10px;
+  box-shadow:0 1px 5px rgba(15,23,42,.05);
+  backdrop-filter:blur(3px);
+}
+</style>
+</head>
+<body><div class="wrap">
+<h1>SAWA Weekly Schedule Checker<span class="geoman-badge">by geoman</span></h1>
+<div class="sub">Upload the Excel schedule. It checks every WEEK sheet for duplicate shifts, work + leave, and OV → AM.</div>
+<div class="box">
+<input id="file" type="file" accept=".xlsx,.xls">
+<div class="row" style="margin-top:12px"><button class="primary" id="checkBtn">Check Excel</button><button class="muted" id="clearBtn">Clear</button></div>
+<div id="status" class="small" style="margin-top:10px"></div>
+</div>
+<div id="results" class="hidden">
+<div class="box">
+<h3>Conflict Report</h3><div class="small">Grouped by person name. Each person shows only their conflicts. Reads each day block directly from the Excel layout. Blank continuation rows stay with the previous shift; MISSIONS rows are ignored. Same-day = 2 different working shifts on the same date. OV → AM = previous calendar day OV followed by next-day AM.</div><div id="tableWrap" style="margin-top:10px"></div></div>
+</div></div>
+<script>
+const DAYS=["monday","tuesday","wednesday","thursday","friday","saturday","sunday"];
+const WORK=new Set(["AM","PM","OV","SPLIT"]);
+const LEAVE=new Set(["REST","VACATION","MATERNITY","OTHER"]);
+const SHIFT_ALIASES={
+ "am":"AM","pm":"PM","ov":"OV","0v":"OV",
+ "rest":"REST","off":"REST",
+ "vacation":"VACATION","maternity":"MATERNITY",
+ "other":"OTHER","others":"OTHER",
+ "split":"SPLIT","split (8pm-4am)":"SPLIT",
+ "missions":"MISSIONS","mission":"MISSIONS"
+};
+function norm(v){return String(v??"").replace(/\s+/g," ").trim().toLowerCase()}
+function clean(v){return String(v??"").replace(/\s+/g," ").trim()}
+function weekNum(s){let m=String(s).match(/WEEK\s*(\d+)/i);return m?+m[1]:9999}
+function excelDate(v){
+ if(v instanceof Date && !isNaN(v))return v;
+ if(typeof v==="number"){
+   const d=XLSX.SSF.parse_date_code(v);
+   if(d)return new Date(Date.UTC(d.y,d.m-1,d.d));
+ }
+ const s=String(v??"").trim(),m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+ if(m){let y=+m[3];if(y<100)y+=2000;return new Date(Date.UTC(y,+m[2]-1,+m[1]));}
+ return null;
+}
+function addDays(d,n){const x=new Date(d.getTime());x.setUTCDate(x.getUTCDate()+n);return x}
+function dateLabel(d){return d?`${String(d.getUTCDate()).padStart(2,"0")}/${String(d.getUTCMonth()+1).padStart(2,"0")}/${d.getUTCFullYear()}`:""}
+function dateKey(d){return d?d.getTime():Number.MAX_SAFE_INTEGER}
+
+function parseWeek(ws){
+ const rg=XLSX.utils.decode_range(ws["!ref"]||"A1:A1");
+ const starts=[];
+ // Day blocks are identified ONLY from row 2. This matches both Moderators
+ // (wide blocks) and Backup Team (2-column blocks).
+ for(let c=0;c<=rg.e.c;c++){
+   const day=norm(ws[XLSX.utils.encode_cell({r:1,c})]?.v);
+   if(DAYS.includes(day))starts.push([day,c]);
+ }
+ if(!starts.length)return {};
+
+ // First date is the actual date stored in row 1 of the first day block.
+ let firstDate=null;
+ for(let c=starts[0][1];c<=rg.e.c && !firstDate;c++){
+   firstDate=excelDate(ws[XLSX.utils.encode_cell({r:0,c})]?.v);
+ }
+ const out={};
+
+ starts.forEach(([day,start],i)=>{
+   const end=i+1<starts.length?starts[i+1][1]-1:rg.e.c;
+   const d=firstDate?addDays(firstDate,DAYS.indexOf(day)):null;
+   out[day]={date:dateLabel(d),dateObj:d,shifts:{}};
+
+   // Schedule area is the top block. Shift labels live in column A.
+   // Blank rows after a shift label are continuation rows of that same shift.
+   // A MISSIONS row is never treated as a shift and never contributes people.
+   let currentShift="";
+   for(let r=2;r<=Math.min(rg.e.r,14);r++){
+     const rawLabel=norm(ws[XLSX.utils.encode_cell({r,c:0})]?.v);
+     const label=SHIFT_ALIASES[rawLabel];
+
+     if(label==="MISSIONS")continue;
+     if(label)currentShift=label;
+     if(!currentShift)continue;
+
+     if(!out[day].shifts[currentShift])out[day].shifts[currentShift]=[];
+
+     for(let c=start;c<=end;c++){
+       const name=clean(ws[XLSX.utils.encode_cell({r,c})]?.v);
+       if(!name)continue;
+       const n=norm(name);
+       if(n==="missions"||n==="mission")continue;
+       // Never treat labels/formulas accidentally sitting inside the schedule as people.
+       if(Object.values(SHIFT_ALIASES).includes(n.toUpperCase()))continue;
+
+       let mission="";
+       // For Moderators, mission is on the immediately following MISSIONS row.
+       const nextLabel=norm(ws[XLSX.utils.encode_cell({r:r+1,c:0})]?.v);
+       if(nextLabel==="missions"||nextLabel==="mission"){
+         mission=clean(ws[XLSX.utils.encode_cell({r:r+1,c})]?.v);
+         if(/^missions?$/i.test(mission))mission="";
+       }
+       out[day].shifts[currentShift].push({name,mission,row:r+1,col:c+1});
+     }
+   }
+ });
+ return out;
+}
+function teamName(prefix){return prefix==="BACKUPTEAM"?"Backup Team":"Moderators"}
+function scanTeam(wb,prefix){
+ const sheets=wb.SheetNames
+   .filter(s=>new RegExp("^"+prefix+"\\s+WEEK\\s+\\d+$","i").test(s))
+   .sort((a,b)=>weekNum(a)-weekNum(b));
+
+ const parsed={};
+ sheets.forEach(s=>parsed[s]=parseWeek(wb.Sheets[s]));
+ const out=[];
+
+ const add=(type,s,day,person,details)=>{
+   const d=parsed[s][day];
+   out.push({
+     type,team:teamName(prefix),week:weekNum(s),day,
+     date:d?.date||"",dateObj:d?.dateObj||null,person,details
+   });
+ };
+
+ // SAME DAY / WORK + LEAVE
+ for(const s of sheets){
+   const week=parsed[s];
+   for(const day of DAYS){
+     const d=week[day];
+     if(!d)continue;
+
+     const byPerson=new Map();
+     for(const [shift,items] of Object.entries(d.shifts)){
+       for(const item of items){
+         const k=norm(item.name);
+         if(!byPerson.has(k))byPerson.set(k,[]);
+         byPerson.get(k).push({shift,name:item.name,mission:item.mission||""});
+       }
+     }
+
+     for(const items of byPerson.values()){
+       const work=items.filter(x=>WORK.has(x.shift));
+       const leave=items.filter(x=>LEAVE.has(x.shift));
+
+       // Different working shifts on the SAME DATE only.
+       const uniqueWork=[...new Map(work.map(x=>[x.shift,x])).values()];
+       if(uniqueWork.length>=2){
+         add("SAME DAY",s,day,items[0].name,
+           uniqueWork.map(x=>`${x.shift}: ${x.mission||"No mission entered"}`).join(" | "));
+       }
+
+       // Same person working and being OFF/Vacation/Other on the same date.
+       if(work.length&&leave.length){
+         add("WORK+LEAVE",s,day,items[0].name,
+           [...uniqueWork.map(x=>`${x.shift}: ${x.mission||"No mission entered"}`),
+            ...leave.map(x=>x.shift)].join(" | "));
+       }
+     }
+   }
+ }
+
+ // PREVIOUS-DAY OV -> NEXT-DAY AM
+ for(let i=0;i<sheets.length;i++){
+   const currentSheet=sheets[i],cur=parsed[currentSheet];
+   for(let di=0;di<DAYS.length;di++){
+     const day=DAYS[di],ov=cur[day]?.shifts?.OV||[];
+     if(!ov.length)continue;
+
+     let next=cur,nextDay=DAYS[di+1],nextSheet=currentSheet;
+     if(di===6){
+       if(i+1>=sheets.length)continue;
+       next=parsed[sheets[i+1]];
+       nextDay="monday";
+       nextSheet=sheets[i+1];
+     }
+
+     const amMap=new Map((next[nextDay]?.shifts?.AM||[]).map(x=>[norm(x.name),x]));
+     for(const ovItem of ov){
+       const am=amMap.get(norm(ovItem.name));
+       if(!am)continue;
+       out.push({
+         type:"OV→AM",
+         team:teamName(prefix),
+         week:weekNum(nextSheet),
+         day:nextDay,
+         date:next[nextDay].date,
+         dateObj:next[nextDay].dateObj,
+         person:ovItem.name,
+         details:`${day} ${cur[day].date} — OV: ${ovItem.mission||"No mission entered"} | ${nextDay} ${next[nextDay].date} — AM: ${am.mission||"No mission entered"}`
+       });
+     }
+   }
+ }
+
+ out.sort((a,b)=>{
+   const p=a.person.localeCompare(b.person,undefined,{sensitivity:"base"});
+   if(p)return p;
+   const d=dateKey(a.dateObj)-dateKey(b.dateObj);
+   if(d)return d;
+   return a.type.localeCompare(b.type);
+ });
+ return out;
+}
+
+function getWeekNames(wb){
+ return wb.SheetNames.filter(s=>/^(MODERATORS|BACKUPTEAM)\s+WEEK\s+\d+$/i.test(s))
+ .map(s=>{const m=s.match(/WEEK\s*(\d+)/i);return m?+m[1]:null}).filter(x=>x!==null)
+ .filter((x,i,a)=>a.indexOf(x)===i).sort((a,b)=>a-b);
+}
+function renderWeekPicker(wb){
+ const weeks=getWeekNames(wb);
+ weekPicker.innerHTML=weeks.length?weeks.map(w=>`<label class="weekbox"><input type="checkbox" class="weekChoice" value="${w}" checked> Week ${w}</label>`).join(""):'<span class="small">No WEEK sheets found.</span>';
+}
+function selectedWeeks(){return [...document.querySelectorAll(".weekChoice:checked")].map(x=>+x.value);}
+
+checkBtn.onclick=async()=>{
+ const f=file.files[0];if(!f){status.textContent="Choose an Excel file first.";return}
+ try{status.textContent="Reading and checking…";const wb=XLSX.read(await f.arrayBuffer(),{cellDates:true});
+  const all=[...scanTeam(wb,"MODERATORS"),...scanTeam(wb,"BACKUPTEAM")];
+  const grouped={};
+all.forEach(x=>(grouped[x.person]??=[]).push(x));
+const people=Object.keys(grouped).sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:"base"}));
+tableWrap.innerHTML=all.length
+ ? `<div>${people.map(person=>`<div class="box" style="margin:10px 0;border-left:5px solid #c62828;background:#fffafa">
+   <div style="font-weight:800;font-size:18px">${person}</div>
+   <div class="small" style="margin:3px 0 10px">${grouped[person].length} conflict${grouped[person].length===1?"":"s"}</div>
+   ${grouped[person].map(x=>`<div style="padding:9px 0;border-top:1px solid #eadada">
+     <div style="font-weight:800">🔴 ${x.type==="SAME DAY"?"Same Day Conflict":x.type==="DUPLICATE ENTRY"?"Duplicate Entry in Same Shift":x.type==="WORK+LEAVE"?"Work + Leave Conflict":"OV → AM Conflict"}</div>
+     <div style="margin-top:4px">📅 <b>${x.day[0].toUpperCase()+x.day.slice(1)}${x.date?" — "+x.date:""}</b></div>
+     <div style="margin-top:5px;line-height:1.8">${x.details.split(" | ").map(v=>`<div>• ${v}</div>`).join("")}</div>
+   </div>`).join("")}
+ </div>`).join("")}</div>`
+ : '<div class="ok" style="padding:18px;border:1px solid #b7e0c2;border-radius:12px;background:#f3fff6"><b>✓ No conflicts found.</b></div>';
+results.classList.remove("hidden");status.textContent=`Checked ${f.name} — ${wb.SheetNames.length} sheets.`;
+ }catch(e){console.error(e);status.textContent="Could not read this Excel file: "+e.message}
+};
+clearBtn.onclick=()=>{file.value="";results.classList.add("hidden");status.textContent=""};
+</script><div class="geoman-fixed">geoman</div></body></html>
