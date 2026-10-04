@@ -1,82 +1,34 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>SAWA Weekly Schedule Checker</title>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>SAWA Weekly Schedule Checker</title><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
-:root{font-family:Arial,sans-serif;color:#172033;background:#f5f7fb}*{box-sizing:border-box}body{margin:0}.wrap{max-width:1100px;margin:auto;padding:18px}
-h1{margin:0 0 6px}.sub{color:#65708a;margin-bottom:18px}.box{background:#fff;border:1px solid #dfe5ef;border-radius:14px;padding:16px;margin:12px 0}
-button{border:0;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer}.primary{background:#1769e0;color:white}.muted{background:#eef2f7;color:#263247}
-input[type=file]{width:100%;padding:12px;border:1px dashed #aeb9ca;border-radius:10px;background:#fafbfd}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.card{border:1px solid #e1e6ef;border-radius:12px;padding:13px;background:#fbfcfe}.num{font-size:25px;font-weight:800}.danger{color:#c62828}.ok{color:#17833b}
-table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:9px;border-bottom:1px solid #e7ebf1;text-align:left;vertical-align:top}th{background:#f5f7fb}
-.err{background:#fff5f5}.warn{background:#fffaf0}.hidden{display:none}.pill{display:inline-block;padding:4px 8px;border-radius:99px;background:#eef2f7;font-size:12px;font-weight:700}.small{font-size:12px;color:#6d7890}
-@media(max-width:700px){.cards{grid-template-columns:repeat(2,1fr)}table{font-size:12px}}
-.weekbox{display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid #dfe5ef;border-radius:9px;background:#fafbfd}.weekbox input{accent-color:#1769e0}
-
-.creator-credit{font-size:13px;font-weight:700;letter-spacing:.4px;margin:8px 0 12px;opacity:.72}
-.footer-credit{text-align:center;padding:22px 12px 30px;font-size:13px;font-weight:700;letter-spacing:.5px;opacity:.65}
-
-
-.geoman-badge{
-  display:inline-block;
-  margin-left:10px;
-  padding:5px 9px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:700;
-  letter-spacing:.3px;
-  vertical-align:middle;
-  color:#64748b;
-  background:#f1f5f9;
-  border:1px solid #e2e8f0;
-}
-@media(max-width:600px){
-  .geoman-badge{display:block;width:max-content;margin:8px 0 0;font-size:11px}
-}
-
-.geoman-footer{
-  text-align:center;
-  padding:18px 10px 28px;
-  color:#94a3b8;
-  font-size:11px;
-  font-weight:700;
-  letter-spacing:.5px;
-}
-
-.geoman-fixed{
-  position:fixed;
-  left:50%;
-  bottom:10px;
-  transform:translateX(-50%);
-  z-index:9999;
-  pointer-events:none;
-  font-size:14px;
-  font-weight:700;
-  letter-spacing:.6px;
-  color:rgba(100,116,139,.42);
-  background:rgba(255,255,255,.72);
-  border:1px solid rgba(226,232,240,.55);
-  border-radius:999px;
-  padding:4px 10px;
-  box-shadow:0 1px 5px rgba(15,23,42,.05);
-  backdrop-filter:blur(3px);
-}
+:root{font-family:Arial,sans-serif;color:#172033;background:#f5f7fb}*{box-sizing:border-box}body{margin:0;background:#f5f7fb}.wrap{max-width:1400px;margin:auto;padding:18px}.report-header{display:flex;align-items:center;gap:15px;background:linear-gradient(135deg,#1769e0,#0d4fa8);color:#fff;border-radius:18px;padding:18px 20px;margin-bottom:14px;box-shadow:0 8px 25px rgba(23,105,224,.18)}.brand-icon{width:58px;height:58px;border:3px solid #fff;border-radius:15px;display:grid;place-items:center;font-size:38px;font-weight:900}.brand{flex:1}.brand h1{margin:0;font-size:28px}.report-subtitle{font-size:17px;margin-top:4px;opacity:.92}.geoman-badge{display:inline-block;margin-left:8px;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.16);font-size:11px;font-weight:700}.file-status{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.25);border-radius:13px;padding:11px 13px}.file-name{font-weight:800}.status-pill{background:#dcfce7;color:#166534;padding:7px 10px;border-radius:999px;font-weight:800;font-size:12px}.box{background:#fff;border:1px solid #dfe5ef;border-radius:14px;padding:16px;margin:12px 0}button{border:0;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer}.primary{background:#1769e0;color:white}.muted{background:#eef2f7;color:#263247}input[type=file]{width:100%;padding:12px;border:1px dashed #aeb9ca;border-radius:10px;background:#fafbfd}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.small{font-size:12px;color:#6d7890}.hidden{display:none}.summary-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:12px 0}.summary-card{border:1px solid #dfe5ef;border-radius:13px;background:#fff;padding:13px;display:flex;align-items:center;gap:11px;min-height:92px}.summary-icon{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:23px;font-weight:900}.summary-card b{display:block;font-size:27px}.summary-card span:not(.summary-icon){display:block;font-size:13px;margin-top:4px}.blue .summary-icon{background:#1769e0}.green .summary-icon{background:#16a34a}.red .summary-icon{background:#ef233c}.orange .summary-icon{background:#f59e0b}.sky .summary-icon{background:#1683e8}.purple .summary-icon{background:#7c3aed}.report-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}.report-card{background:#fff;border:1px solid #dfe5ef;border-radius:14px;padding:12px;min-width:0;box-shadow:0 3px 14px rgba(15,23,42,.035)}.card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:10px}.card-head h2{margin:0;font-size:18px}.hint{margin:7px 2px 10px;color:#53617a;font-size:13px}.red-card .card-head{background:#fff0f2;color:#c81e2f}.orange-card .card-head{background:#fff6df;color:#b45309}.sky-card .card-head{background:#eaf5ff;color:#0867c9}.purple-card .card-head{background:#f2eaff;color:#6526cf}.count-badge{min-width:30px;text-align:center;border-radius:9px;padding:6px 9px;color:#fff;font-weight:800}.count-badge.red{background:#e52d3e}.count-badge.orange{background:#ed9500}.count-badge.sky{background:#2086e8}.count-badge.purple{background:#8140e8}.table-scroll{overflow:auto;border:1px solid #e3e8f0;border-radius:9px}table{width:100%;border-collapse:collapse;font-size:12px;min-width:650px}th,td{padding:8px 9px;border-bottom:1px solid #e8edf4;text-align:left;vertical-align:middle}th{background:#f4f7fb;font-weight:800;color:#263653;position:sticky;top:0;z-index:1}tbody tr:last-child td{border-bottom:0}.issue{color:#d61f35;background:#fff0f2;border-radius:7px;padding:5px 7px;font-weight:800;display:inline-block}.shift-pill{display:inline-block;padding:5px 8px;border-radius:7px;font-weight:800;margin:1px 2px}.am{background:#fff0bf;color:#a45a00}.pm{background:#dbeafe;color:#0756b8}.ov{background:#eadcff;color:#6826cc}.leave{background:#fee2e2;color:#b91c1c}.mission{max-width:230px}.empty-state{text-align:center;color:#64748b;padding:16px}.individual-card{margin-top:12px}.individual-head{background:#e9f8ee}.individual-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.individual-controls label{font-size:12px;font-weight:800}.individual-controls select{margin-left:5px;padding:8px 10px;border:1px solid #cfd8e6;border-radius:8px;background:#fff;font-weight:700}.person-stat{padding:7px 10px;border-radius:8px;background:#dbeafe;color:#1758a6;font-size:12px;font-weight:800}.danger-stat{background:#fee2e2;color:#b91c1c}.day-cell{min-width:100px}.day-cell .shift-pill{display:block;width:max-content}.mission-line{font-size:11px;color:#64748b;margin-top:2px}.status-ok{color:#15803d;font-weight:800}.status-bad{color:#c81e2f;font-weight:800}.geoman-fixed{position:fixed;left:50%;bottom:10px;transform:translateX(-50%);z-index:9999;pointer-events:none;font-size:14px;font-weight:700;letter-spacing:.6px;color:rgba(100,116,139,.42);background:rgba(255,255,255,.72);border:1px solid rgba(226,232,240,.55);border-radius:999px;padding:4px 10px;box-shadow:0 1px 5px rgba(15,23,42,.05);backdrop-filter:blur(3px)}@media(max-width:1000px){.summary-grid{grid-template-columns:repeat(3,1fr)}}@media(max-width:760px){.report-grid{grid-template-columns:1fr}.summary-grid{grid-template-columns:repeat(2,1fr)}.file-status{display:none}.brand h1{font-size:23px}.wrap{padding:10px}.individual-head{align-items:flex-start;flex-direction:column}}@media(max-width:460px){.summary-grid{grid-template-columns:1fr 1fr}.summary-card{min-height:80px;padding:10px}.summary-card b{font-size:22px}.summary-icon{width:37px;height:37px;font-size:19px}.card-head h2{font-size:16px}}
 </style>
-</head>
-<body><div class="wrap">
-<h1>SAWA Weekly Schedule Checker<span class="geoman-badge">by geoman</span></h1>
-<div class="sub">Upload the Excel schedule. It checks every WEEK sheet for duplicate shifts, work + leave, and OV → AM.</div>
-<div class="box">
-<input id="file" type="file" accept=".xlsx,.xls">
-<div class="row" style="margin-top:12px"><button class="primary" id="checkBtn">Check Excel</button><button class="muted" id="clearBtn">Clear</button></div>
-<div id="status" class="small" style="margin-top:10px"></div>
-</div>
+</head><body>
+<div class="wrap">
+<header class="report-header"><div class="brand-icon">✓</div><div class="brand"><h1>SAWA Weekly Schedule Checker</h1><div class="report-subtitle">Detailed Report <span class="geoman-badge">by geoman</span></div></div><div class="file-status"><div class="file-name" id="reportFile">No file checked</div><div class="status-pill" id="reportStatus">Waiting</div></div></header>
+<div class="box upload-box"><input id="file" type="file" accept=".xlsx,.xls"><div class="row" style="margin-top:12px"><button class="primary" id="checkBtn">Check Excel</button><button class="muted" id="clearBtn">Clear</button></div><div id="status" class="small" style="margin-top:10px"></div></div>
 <div id="results" class="hidden">
-<div class="box">
-<h3>Conflict Report</h3><div class="small">Grouped by person name. Each person shows only their conflicts. Reads each day block directly from the Excel layout. Blank continuation rows stay with the previous shift; MISSIONS rows are ignored. Same-day = 2 different working shifts on the same date. OV → AM = previous calendar day OV followed by next-day AM.</div><div id="tableWrap" style="margin-top:10px"></div></div>
-</div></div>
+<section class="summary-grid">
+<div class="summary-card blue"><span class="summary-icon">👥</span><div><b id="sumNames">0</b><span>Total Names</span></div></div>
+<div class="summary-card green"><span class="summary-icon">✓</span><div><b id="sumOk">0</b><span>Names OK<br>(Exactly 7 times)</span></div></div>
+<div class="summary-card red"><span class="summary-icon">×</span><div><b id="sumBad">0</b><span>Names with Issues<br>(≠ 7 times)</span></div></div>
+<div class="summary-card orange"><span class="summary-icon">!</span><div><b id="sumSame">0</b><span>Shift Conflicts</span></div></div>
+<div class="summary-card sky"><span class="summary-icon">▣</span><div><b id="sumLeave">0</b><span>Work + Leave</span></div></div>
+<div class="summary-card purple"><span class="summary-icon">↔</span><div><b id="sumOv">0</b><span>OV → AM</span></div></div>
+</section>
+<section class="report-grid">
+<div class="report-card red-card"><div class="card-head"><h2>Names with Incorrect Count (Not 7)</h2><span class="count-badge red" id="badBadge">0</span></div><p class="hint">Only names with fewer or more than 7 shifts are shown.</p><div class="table-scroll"><table><thead><tr><th>#</th><th>Name</th><th>Total Shifts</th><th>Issue</th></tr></thead><tbody id="nameIssuesBody"></tbody></table></div></div>
+<div class="report-card orange-card"><div class="card-head"><h2>Shift Conflicts</h2><span class="count-badge orange" id="sameBadge">0</span></div><p class="hint">Two or more work shifts assigned to the same person on the same date.</p><div class="table-scroll"><table><thead><tr><th>#</th><th>Name</th><th>Week</th><th>Date</th><th>Shift(s)</th><th>Mission(s)</th><th>Issue</th></tr></thead><tbody id="sameBody"></tbody></table></div></div>
+</section>
+<section class="report-grid">
+<div class="report-card sky-card"><div class="card-head"><h2>Work + Leave Conflicts</h2><span class="count-badge sky" id="leaveBadge">0</span></div><p class="hint">A person has a work shift and leave on the same date.</p><div class="table-scroll"><table><thead><tr><th>#</th><th>Name</th><th>Week</th><th>Date</th><th>Shift</th><th>Mission</th><th>Leave</th><th>Issue</th></tr></thead><tbody id="leaveBody"></tbody></table></div></div>
+<div class="report-card purple-card"><div class="card-head"><h2>OV → AM Violations</h2><span class="count-badge purple" id="ovBadge">0</span></div><p class="hint">Overnight shift followed by Morning shift the next day.</p><div class="table-scroll"><table><thead><tr><th>#</th><th>Name</th><th>Week</th><th>Dates</th><th>Shifts</th><th>Mission(s)</th><th>Issue</th></tr></thead><tbody id="ovBody"></tbody></table></div></div>
+</section>
+<section class="report-card individual-card"><div class="card-head individual-head"><div><h2>Individual Schedule &amp; Missions</h2><p class="hint">Select a name to view the full schedule, shifts and missions.</p></div><div class="individual-controls"><label>Select Name <select id="personSelect"></select></label><span class="person-stat danger-stat" id="personTotal">Total Shifts: 0</span><span class="person-stat" id="personExpected">Expected: 7</span></div></div><div class="table-scroll"><table class="individual-table"><thead><tr><th>Week</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th><th>Sun</th><th>Mission / Task</th><th>Status</th></tr></thead><tbody id="individualBody"></tbody></table></div></section>
+</div></div><div class="geoman-fixed">geoman</div>
+
 <script>
 const DAYS=["monday","tuesday","wednesday","thursday","friday","saturday","sunday"];
 const WORK=new Set(["AM","PM","OV","SPLIT"]);
@@ -204,9 +156,9 @@ function scanTeam(wb,prefix){
 
        // Different working shifts on the SAME DATE only.
        const uniqueWork=[...new Map(work.map(x=>[x.shift,x])).values()];
-       if(uniqueWork.length>=2){
+       if(work.length>=2){
          add("SAME DAY",s,day,items[0].name,
-           uniqueWork.map(x=>`${x.shift}: ${x.mission||"No mission entered"}`).join(" | "));
+           work.map(x=>`${x.shift}: ${x.mission||"No mission entered"}`).join(" | "));
        }
 
        // Same person working and being OFF/Vacation/Other on the same date.
@@ -262,107 +214,86 @@ function scanTeam(wb,prefix){
  return out;
 }
 
-function getWeekNames(wb){
- return wb.SheetNames.filter(s=>/^(MODERATORS|BACKUPTEAM)\s+WEEK\s+\d+$/i.test(s))
- .map(s=>{const m=s.match(/WEEK\s*(\d+)/i);return m?+m[1]:null}).filter(x=>x!==null)
- .filter((x,i,a)=>a.indexOf(x)===i).sort((a,b)=>a-b);
-}
-function renderWeekPicker(wb){
- const weeks=getWeekNames(wb);
- weekPicker.innerHTML=weeks.length?weeks.map(w=>`<label class="weekbox"><input type="checkbox" class="weekChoice" value="${w}" checked> Week ${w}</label>`).join(""):'<span class="small">No WEEK sheets found.</span>';
-}
-function selectedWeeks(){return [...document.querySelectorAll(".weekChoice:checked")].map(x=>+x.value);}
 
+const file=document.getElementById("file"),checkBtn=document.getElementById("checkBtn"),clearBtn=document.getElementById("clearBtn"),status=document.getElementById("status"),results=document.getElementById("results");
+let currentWorkbook=null,currentPeople=[];
 
-function scanNameCounts(wb,prefix){
- const sheets=wb.SheetNames
-   .filter(s=>new RegExp("^"+prefix+"\\s+WEEK\\s+\\d+$","i").test(s))
-   .sort((a,b)=>weekNum(a)-weekNum(b));
- const issues=[];
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+function shiftClass(s){return s==="AM"?"am":s==="PM"?"pm":s==="OV"?"ov":"leave"}
+function pill(s){return `<span class="shift-pill ${shiftClass(s)}">${esc(s)}</span>`}
+function emptyRow(msg,cols){return `<tr><td colspan="${cols}" class="empty-state">${msg}</td></tr>`}
+
+function buildNameCounts(wb){
+ const counts=new Map();
+ for(const sheet of wb.SheetNames.filter(s=>/^(MODERATORS|BACKUPTEAM)\s+WEEK\s+\d+$/i.test(s))){
+  const parsed=parseWeek(wb.Sheets[sheet]);
+  for(const day of DAYS){const d=parsed[day];if(!d)continue;
+   for(const items of Object.values(d.shifts))for(const item of items){
+    const k=norm(item.name);if(!k)continue;
+    if(!counts.has(k))counts.set(k,{name:item.name,count:0});
+    counts.get(k).count++;
+   }
+  }
+ }
+ return [...counts.values()].sort((a,b)=>a.name.localeCompare(b.name,undefined,{sensitivity:"base"}));
+}
+function renderNameIssues(counts){
+ const bad=counts.filter(x=>x.count!==7);
+ document.getElementById("badBadge").textContent=bad.length;
+ document.getElementById("nameIssuesBody").innerHTML=bad.length?bad.map((x,i)=>`<tr><td>${i+1}</td><td><b>${esc(x.name)}</b></td><td><b class="danger">${x.count}</b></td><td><span class="issue">× ${x.count<7?"Less than 7":"More than 7"}</span></td></tr>`).join(""):emptyRow("✓ All names appear exactly 7 times.",4);
+}
+function renderSame(rows){
+ document.getElementById("sameBadge").textContent=rows.length;
+ document.getElementById("sameBody").innerHTML=rows.length?rows.map((x,i)=>{
+  const parts=x.details.split(" | "), shifts=parts.map(p=>p.split(":")[0]), missions=parts.map(p=>p.substring(p.indexOf(":")+1).trim());
+  return `<tr><td>${i+1}</td><td><b>${esc(x.person)}</b></td><td>W${x.week}</td><td>${esc(x.day)}${x.date?" — "+esc(x.date):""}</td><td>${shifts.map(pill).join(" ")}</td><td class="mission">${missions.map(esc).join("<br>")}</td><td><span class="issue">Multiple shifts</span></td></tr>`;
+ }).join(""):emptyRow("✓ No shift conflicts found.",7);
+}
+function renderLeave(rows){
+ document.getElementById("leaveBadge").textContent=rows.length;
+ document.getElementById("leaveBody").innerHTML=rows.length?rows.map((x,i)=>{
+  const parts=x.details.split(" | "), work=parts.filter(p=>/^(AM|PM|OV|SPLIT):/i.test(p)), leaves=parts.filter(p=>/^(REST|VACATION|MATERNITY|OTHER)$/i.test(p));
+  return `<tr><td>${i+1}</td><td><b>${esc(x.person)}</b></td><td>W${x.week}</td><td>${esc(x.day)}${x.date?" — "+esc(x.date):""}</td><td>${work.map(p=>pill(p.split(":")[0])).join(" ")}</td><td class="mission">${work.map(p=>esc(p.substring(p.indexOf(":")+1).trim())).join("<br>")}</td><td>${leaves.map(p=>pill(p)).join(" ")}</td><td><span class="issue">Work + Leave</span></td></tr>`;
+ }).join(""):emptyRow("✓ No Work + Leave conflicts found.",8);
+}
+function renderOv(rows){
+ document.getElementById("ovBadge").textContent=rows.length;
+ document.getElementById("ovBody").innerHTML=rows.length?rows.map((x,i)=>{
+  const parts=x.details.split(" | "), missions=parts.map(p=>p.substring(p.indexOf(":")+1).trim());
+  return `<tr><td>${i+1}</td><td><b>${esc(x.person)}</b></td><td>W${x.week}</td><td>${esc(x.day)}${x.date?" — "+esc(x.date):""}</td><td>${pill("OV")} ${pill("AM")}</td><td class="mission">${missions.map(esc).join("<br>")}</td><td><span class="issue">OV → AM</span></td></tr>`;
+ }).join(""):emptyRow("✓ No OV → AM violations found.",7);
+}
+function collectPersonData(wb,name){
+ const rows=[];
+ const sheets=wb.SheetNames.filter(s=>/^(MODERATORS|BACKUPTEAM)\s+WEEK\s+\d+$/i.test(s)).sort((a,b)=>weekNum(a)-weekNum(b));
  for(const sheet of sheets){
-   const parsed=parseWeek(wb.Sheets[sheet]);
-   const counts=new Map();
-   for(const day of DAYS){
-     const d=parsed[day];
-     if(!d)continue;
-     for(const items of Object.values(d.shifts)){
-       for(const item of items){
-         const key=norm(item.name);
-         if(!key)continue;
-         if(!counts.has(key))counts.set(key,{name:item.name,count:0});
-         counts.get(key).count++;
-       }
-     }
-   }
-   for(const x of counts.values()){
-     if(x.count!==7){
-       issues.push({
-         team:teamName(prefix),
-         week:weekNum(sheet),
-         name:x.name,
-         count:x.count
-       });
-     }
-   }
+  const parsed=parseWeek(wb.Sheets[sheet]), days={}, week=weekNum(sheet);let weekCount=0;
+  for(const day of DAYS){days[day]=[];const d=parsed[day];if(!d)continue;
+   for(const [shift,items] of Object.entries(d.shifts))for(const item of items)if(norm(item.name)===norm(name)){days[day].push({shift,mission:item.mission||""});weekCount++;}
+  }
+  rows.push({week,days,weekCount});
  }
- return issues;
+ return rows;
 }
-
-function renderNameCountCheck(issues){
- const old=document.getElementById("nameCountResults");
- if(old)old.remove();
-
- const box=document.createElement("div");
- box.id="nameCountResults";
- box.style.cssText="margin-top:14px;padding:16px;border:1px solid #dbe3ef;border-radius:12px;background:#fff";
-
- if(!issues.length){
-   box.innerHTML='<div style="font-weight:800;color:#16803c;font-size:16px">✓ Name Count Check</div><div style="margin-top:6px">All names appear exactly 7 times.</div>';
- }else{
-   box.innerHTML='<div style="font-weight:800;color:#b42318;font-size:16px">⚠ Name Count Check</div>'+
-     '<div style="margin:6px 0 10px;color:#475569">Names appearing fewer or more than 7 times:</div>'+
-     '<div>'+issues.map(x=>
-       `<div style="display:flex;justify-content:space-between;gap:12px;padding:9px 10px;margin-top:5px;background:#f8fafc;border-radius:8px">
-          <span><b>${escapeHtml(x.name)}</b> <span style="color:#64748b">(${x.team} — Week ${x.week})</span></span>
-          <b style="white-space:nowrap">${x.count} times</b>
-        </div>`).join("")+
-     '</div>';
- }
- tableWrap.parentElement.appendChild(box);
+function renderIndividual(name){
+ const rows=collectPersonData(currentWorkbook,name);let total=0;rows.forEach(w=>total+=w.weekCount);
+ const totalEl=document.getElementById("personTotal");totalEl.textContent=`Total Shifts: ${total}`;totalEl.className="person-stat "+(total===7?"":"danger-stat");
+ document.getElementById("individualBody").innerHTML=rows.map(w=>`<tr><td><b>Week ${w.week}</b></td>${DAYS.map(day=>`<td class="day-cell">${(w.days[day]||[]).length?(w.days[day].map(x=>`${pill(x.shift)}${x.mission?`<div class="mission-line">${esc(x.mission)}</div>`:""}`).join("")):"-"}</td>`).join("")}<td class="mission">${[...new Set(DAYS.flatMap(d=>(w.days[d]||[]).map(x=>x.mission)).filter(Boolean))].map(esc).join("<br>")||"-"}</td><td class="${w.weekCount===7?"status-ok":"status-bad"}">${w.weekCount===7?"✓ OK":`⚠ ${w.weekCount} shifts`}</td></tr>`).join("")||emptyRow("No schedule found for this name.",10);
 }
-
-function escapeHtml(v){
- return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+function setupPeople(counts){
+ const sel=document.getElementById("personSelect");currentPeople=counts.map(x=>x.name);sel.innerHTML=currentPeople.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join("");if(currentPeople.length)renderIndividual(currentPeople[0]);sel.onchange=()=>renderIndividual(sel.value);
 }
-
 checkBtn.onclick=async()=>{
  const f=file.files[0];if(!f){status.textContent="Choose an Excel file first.";return}
- try{status.textContent="Reading and checking…";const wb=XLSX.read(await f.arrayBuffer(),{cellDates:true});
-  const all=[...scanTeam(wb,"MODERATORS"),...scanTeam(wb,"BACKUPTEAM")];
-  const grouped={};
-all.forEach(x=>(grouped[x.person]??=[]).push(x));
-const people=Object.keys(grouped).sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:"base"}));
-tableWrap.innerHTML=all.length
- ? `<div>${people.map(person=>`<div class="box" style="margin:10px 0;border-left:5px solid #c62828;background:#fffafa">
-   <div style="font-weight:800;font-size:18px">${person}</div>
-   <div class="small" style="margin:3px 0 10px">${grouped[person].length} conflict${grouped[person].length===1?"":"s"}</div>
-   ${grouped[person].map(x=>`<div style="padding:9px 0;border-top:1px solid #eadada">
-     <div style="font-weight:800">🔴 ${x.type==="SAME DAY"?"Same Day Conflict":x.type==="DUPLICATE ENTRY"?"Duplicate Entry in Same Shift":x.type==="WORK+LEAVE"?"Work + Leave Conflict":"OV → AM Conflict"}</div>
-     <div style="margin-top:4px">📅 <b>${x.day[0].toUpperCase()+x.day.slice(1)}${x.date?" — "+x.date:""}</b></div>
-     <div style="margin-top:5px;line-height:1.8">${x.details.split(" | ").map(v=>`<div>• ${v}</div>`).join("")}</div>
-   </div>`).join("")}
- </div>`).join("")}</div>`
- : '<div class="ok" style="padding:18px;border:1px solid #b7e0c2;border-radius:12px;background:#f3fff6"><b>✓ No conflicts found.</b></div>';
-results.classList.remove("hidden");
- const nameIssues=[...scanNameCounts(wb,"MODERATORS"),...scanNameCounts(wb,"BACKUPTEAM")];
- renderNameCountCheck(nameIssues);
- status.textContent=`Checked ${f.name} — ${wb.SheetNames.length} sheets.`;
+ try{
+  status.textContent="Reading and checking…";const wb=XLSX.read(await f.arrayBuffer(),{cellDates:true});currentWorkbook=wb;
+  const all=[...scanTeam(wb,"MODERATORS"),...scanTeam(wb,"BACKUPTEAM")],counts=buildNameCounts(wb);
+  const same=all.filter(x=>x.type==="SAME DAY"),leave=all.filter(x=>x.type==="WORK+LEAVE"),ov=all.filter(x=>x.type==="OV→AM");
+  document.getElementById("sumNames").textContent=counts.length;document.getElementById("sumOk").textContent=counts.filter(x=>x.count===7).length;document.getElementById("sumBad").textContent=counts.filter(x=>x.count!==7).length;document.getElementById("sumSame").textContent=same.length;document.getElementById("sumLeave").textContent=leave.length;document.getElementById("sumOv").textContent=ov.length;
+  renderNameIssues(counts);renderSame(same);renderLeave(leave);renderOv(ov);setupPeople(counts);
+  document.getElementById("reportFile").textContent=f.name;document.getElementById("reportStatus").textContent="Completed";results.classList.remove("hidden");status.textContent=`Checked ${f.name} — ${wb.SheetNames.length} sheets.`;window.scrollTo({top:results.offsetTop-10,behavior:"smooth"});
  }catch(e){console.error(e);status.textContent="Could not read this Excel file: "+e.message}
 };
-clearBtn.onclick=()=>{
- file.value="";
- results.classList.add("hidden");
- const n=document.getElementById("nameCountResults");if(n)n.remove();
- status.textContent="";
-};
-</script><div class="geoman-fixed">geoman</div></body></html>
+clearBtn.onclick=()=>{file.value="";results.classList.add("hidden");status.textContent="";currentWorkbook=null;document.getElementById("reportFile").textContent="No file checked";document.getElementById("reportStatus").textContent="Waiting"};
+</script>
+</body></html>
