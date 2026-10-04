@@ -63,20 +63,30 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:9px;borde
   box-shadow:0 1px 5px rgba(15,23,42,.05);
   backdrop-filter:blur(3px);
 }
-.pwa-install-wrap{margin:10px 0 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}.install-btn{border:0;border-radius:10px;padding:10px 15px;background:#1769e0;color:#fff;font-size:14px;font-weight:800;cursor:pointer}.install-status{font-size:12px;color:#64748b}</style>
-<link rel="manifest" href="/manifest.webmanifest">
-<meta name="theme-color" content="#1769e0">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="SAWA Weekly Checker">
-<link rel="apple-touch-icon" href="/icons/icon-192.png">
+</style>
+
+<style>
+.install-wrap{margin:10px 0 14px}
+.install-btn{border:0;border-radius:10px;padding:11px 17px;background:#1769e0;color:#fff;font-size:15px;font-weight:800;cursor:pointer}
+.install-btn:active{transform:scale(.98)}
+.install-modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.48);z-index:9999;padding:20px;align-items:center;justify-content:center}
+.install-modal.show{display:flex}
+.install-card{position:relative;width:min(440px,100%);background:#fff;border-radius:20px;padding:25px 21px 20px;box-shadow:0 20px 60px rgba(0,0,0,.25);font-family:inherit}
+.install-card h2{margin:0 35px 8px 0;font-size:23px;color:#172033}
+.install-intro{margin:0 0 17px;color:#64748b;line-height:1.5}
+.install-step{background:#f5f7fb;border:1px solid #e2e8f0;border-radius:14px;padding:14px;margin:10px 0}
+.step-title{font-weight:800;color:#172033;margin-bottom:7px}
+.step-text{color:#475569;line-height:1.55;font-size:14px}
+.install-close{position:absolute;right:13px;top:9px;border:0;background:transparent;font-size:30px;line-height:1;color:#64748b;cursor:pointer}
+.install-ok{width:100%;border:0;border-radius:11px;padding:12px;background:#1769e0;color:#fff;font-size:15px;font-weight:800;margin-top:8px;cursor:pointer}
+</style>
 </head>
 <body><div class="wrap">
-<h1>SAWA Weekly Schedule Checker<span class="geoman-badge">by geoman</span></h1><div class="pwa-install-wrap">
-<button id="installBtn" class="install-btn" type="button">Install SAWA Weekly Checker</button>
-<span id="installStatus" class="install-status"></span>
+<h1>SAWA Weekly Schedule Checker<span class="geoman-badge">by geoman</span></h1>
+<div class="install-wrap">
+  <button id="installBtn" class="install-btn" type="button">Install SAWA Weekly Checker</button>
 </div>
+
 <div class="sub">Upload the Excel schedule. It checks every WEEK sheet for duplicate shifts, work + leave, and OV → AM.</div>
 <div class="box">
 <input id="file" type="file" accept=".xlsx,.xls">
@@ -305,45 +315,40 @@ results.classList.remove("hidden");status.textContent=`Checked ${f.name} — ${w
  }catch(e){console.error(e);status.textContent="Could not read this Excel file: "+e.message}
 };
 clearBtn.onclick=()=>{file.value="";results.classList.add("hidden");status.textContent=""};
-</script><div class="geoman-fixed">geoman</div><script>
-(() => {
-  let installEvent = null;
-  const btn = document.getElementById("installBtn");
-  const status = document.getElementById("installStatus");
-  const standalone = () =>
-    window.matchMedia("(display-mode: standalone)").matches ||
-    window.matchMedia("(display-mode: fullscreen)").matches ||
-    window.navigator.standalone === true;
+</script><div class="geoman-fixed">geoman</div>
+<div id="installModal" class="install-modal" aria-hidden="true">
+  <div class="install-card" role="dialog" aria-modal="true" aria-labelledby="installTitle">
+    <button id="closeInstall" class="install-close" type="button" aria-label="Close">×</button>
+    <h2 id="installTitle">Install SAWA Weekly Checker</h2>
+    <p class="install-intro">Install it on your device for quick access from your Home Screen.</p>
 
-  if (standalone()) {
-    btn.style.display = "none";
-    return;
-  }
+    <div class="install-step">
+      <div class="step-title">📱 Android — Chrome</div>
+      <div class="step-text">1. Press <b>⋮</b> at the top-right of Chrome.<br>
+      2. Choose <b>Install app</b> or <b>Add to Home screen</b>.<br>
+      3. Confirm the installation.</div>
+    </div>
 
-  window.addEventListener("beforeinstallprompt", e => {
-    e.preventDefault();
-    installEvent = e;
-  });
+    <div class="install-step">
+      <div class="step-title">💻 Computer — Chrome / Edge</div>
+      <div class="step-text">Look for the <b>Install</b> icon near the address bar, then confirm.</div>
+    </div>
 
-  window.addEventListener("appinstalled", () => {
-    installEvent = null;
-    btn.style.display = "none";
-    status.textContent = "";
-  });
+    <button id="closeInstall2" class="install-ok" type="button">Got it</button>
+  </div>
+</div>
 
-  btn.addEventListener("click", async () => {
-    if (!installEvent) {
-      status.textContent = "Install is not available from this browser yet.";
-      return;
-    }
-    const e = installEvent;
-    installEvent = null;
-    await e.prompt();
-    await e.userChoice;
-  });
-
-  if ("serviceWorker" in navigator && location.protocol === "https:") {
-    navigator.serviceWorker.register("/sw.js", {scope:"/"}).catch(() => {});
-  }
+<script>
+(function(){
+  const modal=document.getElementById('installModal');
+  const open=document.getElementById('installBtn');
+  const close1=document.getElementById('closeInstall');
+  const close2=document.getElementById('closeInstall2');
+  function hide(){modal.classList.remove('show');modal.setAttribute('aria-hidden','true');}
+  open.addEventListener('click',function(){modal.classList.add('show');modal.setAttribute('aria-hidden','false');});
+  close1.addEventListener('click',hide);
+  close2.addEventListener('click',hide);
+  modal.addEventListener('click',function(e){if(e.target===modal) hide();});
 })();
-</script></body></html>
+</script>
+</body></html>
