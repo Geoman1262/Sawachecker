@@ -26,14 +26,32 @@ function dateObj(v){if(v instanceof Date&&!isNaN(v))return v;if(typeof v==='numb
 function iso(d){return d?`${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`:''}
 function shiftScope(){let d=$('backDate').value,tf=$('timeFrame').value;if(!d)return null;let date=new Date(d+'T00:00:00Z');let shift=tf==='Morning'?'OV':tf==='Overnight'?'PM':'AM';if(tf==='Morning')date.setUTCDate(date.getUTCDate()-1);return {backDate:d,excelDate:iso(date),shift,tf}}
 function updateScope(){let s=shiftScope();$('scopeSummary').innerHTML=s?`Backoffice: <b>${s.backDate}</b><br>Excel date: <b>${s.excelDate}</b><br>Excel shift: <b>${s.shift}</b><br><span class="badge">Only this date + shift</span>`:'Choose a date and Time frame.'}
-$('backDate').addEventListener('change',updateScope);$('timeFrame').addEventListener('change',updateScope);
-$('excelFile').addEventListener('change',async e=>{let f=e.target.files[0];if(!f)return;try{let data=await f.arrayBuffer();workbook=XLSX.read(data,{type:'array',cellDates:true});$('sheetSelect').innerHTML='';workbook.SheetNames.forEach(n=>{let o=document.createElement('option');o.value=n;o.textContent=n;$('sheetSelect').appendChild(o)});$('sheetSelect').disabled=false;const candidates=workbook.SheetNames.filter(n=>/MODERATORS WEEK|BACKUPTEAM/i.test(n));if(candidates.length)$('sheetSelect').value=candidates[0];$('ocrStatus').textContent=`Excel loaded (${workbook.SheetNames.length} worksheets). Select the appropriate sheet.`;extractScopedExcel()}catch(err){$('ocrStatus').textContent='Could not read Excel: '+err.message}});
+$('backDate').addEventListener('change',()=>{updateScope();extractScopedExcel()});$('timeFrame').addEventListener('change',()=>{updateScope();extractScopedExcel()});
+$('excelFile').addEventListener('change',async e=>{let f=e.target.files[0];if(!f)return;try{let data=await f.arrayBuffer();workbook=XLSX.read(data,{type:'array',cellDates:true});$('sheetSelect').innerHTML='';workbook.SheetNames.forEach(n=>{let o=document.createElement('option');o.value=n;o.textContent=n;$('sheetSelect').appendChild(o)});$('sheetSelect').disabled=false;const candidates=workbook.SheetNames.filter(n=>/^MODERATORS(?: WEEK\s*\d+)?$/i.test(n.trim()));
+if(candidates.length)$('sheetSelect').value=candidates[0];
+$('ocrStatus').textContent=`Excel loaded. Daily Checker is restricted to MODERATOR worksheets only.`;extractScopedExcel()}catch(err){$('ocrStatus').textContent='Could not read Excel: '+err.message}});
 $('sheetSelect').addEventListener('change',extractScopedExcel);
 function extractScopedExcel(){
  if(!workbook)return;
  const scope=shiftScope();
  if(!scope){$('excelRows').value='';$('ocrStatus').textContent='Choose the Backoffice date and Time frame to extract only the matching Excel rows.';return;}
- const ws=workbook.Sheets[$('sheetSelect').value];
+ // Daily Checker is MODERATOR-only. Automatically choose the MODERATORS worksheet
+ // whose date headers contain the mapped Excel date; never use BACKUPTEAM.
+ const modSheets=workbook.SheetNames.filter(n=>/^MODERATORS(?: WEEK\s*\d+)?$/i.test(n.trim()));
+ const parseHeaderDate=(v,yearHint)=>{
+  if(v instanceof Date&&!isNaN(v))return `${v.getUTCFullYear()}-${String(v.getUTCMonth()+1).padStart(2,'0')}-${String(v.getUTCDate()).padStart(2,'0')}`;
+  if(typeof v==='number'){const z=XLSX.SSF.parse_date_code(v);if(z)return `${z.y}-${String(z.m).padStart(2,'0')}-${String(z.d).padStart(2,'0')}`;}
+  const x=String(v??'').trim();let m=x.match(/^(\d{1,2})[- ]([A-Za-z]{3})(?:[- ](\d{2,4}))?$/);
+  if(m){const mo=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(m[2].toLowerCase());let y=m[3]?+m[3]:+(String(yearHint||'').slice(0,4));if(y<100)y+=2000;if(mo>=0&&y)return `${y}-${String(mo+1).padStart(2,'0')}-${String(+m[1]).padStart(2,'0')}`;}
+  return '';
+ };
+ let chosenSheet='';
+ for(const sn of modSheets){const sw=workbook.Sheets[sn];if(!sw||!sw['!ref'])continue;const rr=XLSX.utils.decode_range(sw['!ref']);for(let c=0;c<=rr.e.c;c++){const hd=sw[XLSX.utils.encode_cell({r:0,c})]?.v;if(parseHeaderDate(hd,scope.excelDate)===scope.excelDate){chosenSheet=sn;break;}}if(chosenSheet)break;}
+ if(chosenSheet)$('sheetSelect').value=chosenSheet;
+ else if(modSheets.length===1){$('sheetSelect').value=modSheets[0];}
+ const selectedName=$('sheetSelect').value;
+ if(!/^MODERATORS(?: WEEK\s*\d+)?$/i.test(selectedName.trim())){ $('excelRows').value=''; $('ocrStatus').textContent='Daily Checker checks MODERATOR worksheets only. Choose a MODERATORS worksheet.';return;}
+ const ws=workbook.Sheets[selectedName];
  if(!ws)return;
  const range=XLSX.utils.decode_range(ws['!ref']||'A1:A1');
  const dayNames=['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
