@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>SAWA Schedule Checker</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>SAWA Schedule Checker — Daily Scope Fix</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f4f7fb;color:#172033;font-family:Arial,sans-serif}.top{background:#fff;padding:24px 26px;border-bottom:1px solid #dce3ed}.top h1{margin:0 0 8px;font-size:30px}.top p{margin:0;color:#68758a;font-size:17px}.tabs{display:flex;gap:12px;padding:22px 24px 0}.tab{flex:1;border:1px solid #d7e0ec;background:white;border-radius:18px;padding:18px 10px;font-weight:700;font-size:18px;cursor:pointer}.tab.active{background:#1b4176;color:white}.notice{margin:16px 24px;background:#fff7d9;border:1px solid #efdfa1;border-radius:15px;padding:16px 20px;color:#655626;font-size:16px}.panel{margin:0 24px 28px;background:white;border-radius:20px;padding:22px;box-shadow:0 4px 18px #1720330b}.hidden{display:none!important}iframe{display:block;width:100%;height:calc(100vh - 220px);min-height:760px;border:0;background:white;border-radius:16px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.field{margin-bottom:16px}.field label{display:block;font-weight:700;margin-bottom:8px}.field input,.field select,.field textarea{width:100%;border:1px solid #cfd8e5;border-radius:12px;padding:12px;font:inherit;background:white}.field textarea{min-height:150px}.btn{border:0;border-radius:12px;background:#1b4176;color:#fff;padding:13px 18px;font-weight:700;font-size:16px;cursor:pointer}.btn.secondary{background:#e8eef7;color:#1b4176}.btn:disabled{opacity:.5}.hint{color:#69768a;font-size:14px;line-height:1.5}.badge{display:inline-block;padding:5px 9px;border-radius:999px;font-weight:700;font-size:12px;background:#e7f0ff;color:#2457a4}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0}.stat{border:1px solid #e1e7ef;border-radius:12px;padding:13px}.stat strong{display:block;font-size:24px;margin-bottom:5px}.table-wrap{overflow:auto;margin-top:14px}table{border-collapse:collapse;width:100%;min-width:900px}th,td{text-align:left;padding:12px;border:1px solid #e0e6ee;vertical-align:top}th{background:#f0f4fa}.ok{color:#147544;font-weight:700}.bad{color:#b42336;font-weight:700}.warn{color:#986100;font-weight:700}.small{font-size:13px}.checkrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}@media(max-width:650px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.top h1{font-size:25px}.tabs{padding-left:12px;padding-right:12px}.panel,.notice{margin-left:12px;margin-right:12px}.panel{padding:15px}}
@@ -8,7 +8,7 @@
 <header class="top"><h1>SAWA Schedule Checker</h1><p>Choose the checker you want to use.</p></header>
 <nav class="tabs"><button class="tab active" id="weeklyTab">Weekly Checker</button><button class="tab" id="dailyTab">Daily Checker</button></nav>
 <div id="weeklyView"><div class="notice">Weekly Checker is embedded from the preserved source. Daily features are separate.</div><div class="panel" style="padding:8px"><iframe id="weeklyFrame" title="Weekly Checker"></iframe></div></div>
-<div id="dailyView" class="hidden"><div class="notice"><b>Daily only:</b> comparison is restricted to the selected Backoffice date and Time frame. It does not scan other dates or shifts. Weekly source is kept separately inside this file.</div>
+<div id="dailyView" class="hidden"><div class="notice"><b>Daily scope fix:</b> comparison is restricted to the selected Backoffice date and Time frame. It does not scan other dates or shifts. Weekly source is kept separately inside this file.</div>
 <section class="panel"><h2 style="margin-top:0">1. Upload sources</h2><div class="grid"><div class="field"><label for="excelFile">Weekly Excel file (Moderator schedule only)</label><input id="excelFile" type="file" accept=".xlsx,.xls,.xlsm"><div class="hint">The checker reads the selected date scope only; it does not run weekly conflict checks.</div></div><div class="field"><label for="screenshots">Backoffice screenshot(s)</label><input id="screenshots" type="file" accept="image/*" multiple><div class="hint">OCR is a draft. Verify names and task text before comparing.</div></div></div><div class="field"><label for="sheetSelect">Excel worksheet</label><select id="sheetSelect" disabled><option>Upload Excel first</option></select></div>
 <div class="grid"><div class="field"><label for="backDate">Backoffice screenshot date</label><input id="backDate" type="date"></div><div class="field"><label for="timeFrame">Time frame</label><select id="timeFrame"><option value="Morning">Morning</option><option value="Overnight">Overnight</option><option value="Midshift">Midshift</option></select></div></div><div class="checkrow"><button class="btn" id="readImages">Read screenshot(s)</button><span id="ocrStatus" class="hint">No screenshot read yet.</span></div><div class="field"><label for="ocrText">Extracted text — review and correct before comparison</label><textarea id="ocrText" placeholder="OCR output will appear here. You can edit it manually if needed."></textarea></div>
 </section>
@@ -37,48 +37,52 @@ function extractScopedExcel(){
  if(!workbook)return;
  const scope=shiftScope();
  if(!scope){$('excelRows').value='';$('ocrStatus').textContent='Choose the Backoffice screenshot date and Time frame.';return;}
- const dateKey=v=>{
-  if(v instanceof Date&&!isNaN(v))return `${v.getUTCFullYear()}-${String(v.getUTCMonth()+1).padStart(2,'0')}-${String(v.getUTCDate()).padStart(2,'0')}`;
-  if(typeof v==='number'){const z=XLSX.SSF.parse_date_code(v);if(z)return `${z.y}-${String(z.m).padStart(2,'0')}-${String(z.d).padStart(2,'0')}`;}
-  const x=String(v??'').trim();let m=x.match(/^(\d{1,2})[- ]([A-Za-z]{3})(?:[- ,]+(\d{4}))?$/);
-  if(m){const mo=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(m[2].slice(0,3).toLowerCase());const y=m[3]?+m[3]:+scope.excelDate.slice(0,4);if(mo>=0)return `${y}-${String(mo+1).padStart(2,'0')}-${String(+m[1]).padStart(2,'0')}`;}
-  const d=dateObj(x);return d?iso(d):'';
- };
  const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
  const norm=v=>clean(v).toLowerCase();
- const shiftMap={'am':'AM','pm':'PM','ov':'OV','0v':'OV','overnight':'OV','morning':'AM','rest':'REST','off':'REST'};
+ // Parse Excel header dates without local timezone conversion.
+ const dateKey=v=>{
+  if(v instanceof Date&&!isNaN(v))return `${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,'0')}-${String(v.getDate()).padStart(2,'0')}`;
+  if(typeof v==='number'){const z=XLSX.SSF.parse_date_code(v);if(z)return `${z.y}-${String(z.m).padStart(2,'0')}-${String(z.d).padStart(2,'0')}`;}
+  const x=clean(v);let m=x.match(/^(\d{1,2})[- ]([A-Za-z]{3})(?:[- ,]+(\d{4}))?$/);
+  if(m){const mo=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(m[2].slice(0,3).toLowerCase());const y=m[3]?+m[3]:+scope.excelDate.slice(0,4);if(mo>=0)return `${y}-${String(mo+1).padStart(2,'0')}-${String(+m[1]).padStart(2,'0')}`;}
+  m=x.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);if(m)return `${m[1]}-${String(+m[2]).padStart(2,'0')}-${String(+m[3]).padStart(2,'0')}`;
+  return '';
+ };
  const modSheets=workbook.SheetNames.filter(n=>/^MODERATORS(?:\s+WEEK\s*\d+)?$/i.test(n.trim()));
  let found=null;
  for(const sn of modSheets){
   const ws=workbook.Sheets[sn];if(!ws||!ws['!ref'])continue;
   const rg=XLSX.utils.decode_range(ws['!ref']);const dateCols=[];
-  // Dates live in row 1 (Excel row 1) at the start of each merged day block.
-  for(let c=0;c<=rg.e.c;c++){const v=ws[XLSX.utils.encode_cell({r:0,c})]?.v;const key=dateKey(v);if(key)dateCols.push({c,key});}
-  for(let i=0;i<dateCols.length;i++){
-   if(dateCols[i].key!==scope.excelDate)continue;
-   const next=dateCols.slice(i+1).find(x=>x.c>dateCols[i].c);
-   found={sheet:sn,ws,start:dateCols[i].c,end:next?next.c-1:rg.e.c};break;
+  // The day date is in row 1 at the first column of each merged day block.
+  for(let c=0;c<=rg.e.c;c++){
+   const cell=ws[XLSX.utils.encode_cell({r:0,c})];
+   const key=dateKey(cell?.v ?? cell?.w);
+   if(key)dateCols.push({c,key});
   }
-  if(found)break;
+  const hit=dateCols.findIndex(x=>x.key===scope.excelDate);
+  if(hit<0)continue;
+  const next=dateCols.slice(hit+1).find(x=>x.c>dateCols[hit].c);
+  found={sheet:sn,ws,start:dateCols[hit].c,end:next?next.c-1:rg.e.c};break;
  }
- if(!found){$('excelRows').value='';$('ocrStatus').textContent=`No Moderator date block found for Excel ${scope.excelDate}. Backoffice ${scope.backDate} + ${scope.tf} maps to ${scope.excelDate} / ${scope.shift}. Other dates and shifts were not checked.`;return;}
+ if(!found){$('excelRows').value='';$('ocrStatus').textContent=`Exact date not found: Backoffice ${scope.backDate} + ${scope.tf} requires Excel ${scope.excelDate} / ${scope.shift}. No other date or shift was used.`;return;}
  $('sheetSelect').value=found.sheet;
- const ws=found.ws, rg=XLSX.utils.decode_range(ws['!ref']);
- // SAWA Moderator layout: names at Excel rows 4/6/8/10; their task is immediately below.
- const shiftRows=[{row:3,shift:'AM',taskRow:4},{row:5,shift:'PM',taskRow:6},{row:7,shift:'OV',taskRow:8},{row:9,shift:'REST',taskRow:10}];
- const picked=shiftRows.find(x=>x.shift===scope.shift);
+ const ws=found.ws;
+ // SAWA Moderator worksheet: AM row 4/task row 5, PM row 6/task row 7, OV row 8/task row 9.
+ const shiftRows={'AM':{row:3,taskRow:4},'PM':{row:5,taskRow:6},'OV':{row:7,taskRow:8}};
+ const picked=shiftRows[scope.shift];
  if(!picked){$('excelRows').value='';$('ocrStatus').textContent=`Unsupported mapped shift ${scope.shift}.`;return;}
  const out=[];
  for(let c=found.start;c<=found.end;c++){
   const name=clean(ws[XLSX.utils.encode_cell({r:picked.row,c})]?.v);
   if(!name)continue;
-  const n=norm(name);
-  if(['missions','mission','am','pm','ov','0v','rest','off','vacation','sick leave'].includes(n))continue;
+  if(['missions','mission','am','pm','ov','0v','rest','off','vacation','sick leave','other'].includes(norm(name)))continue;
   const task=clean(ws[XLSX.utils.encode_cell({r:picked.taskRow,c})]?.v);
   out.push(`${name} | ${scope.shift} | ${task}`);
  }
  $('excelRows').value=out.join('\n');
- if(out.length){$('ocrStatus').textContent=`Scope verified: Backoffice date ${scope.backDate} (${scope.tf}) → Excel date ${scope.excelDate}, Moderator shift ${scope.shift}. Extracted ${out.length} rows from ${found.sheet}.`;}else{$('ocrStatus').textContent=`Date block ${scope.excelDate} was found in ${found.sheet}, but no names were found in shift ${scope.shift}.`}
+ $('ocrStatus').textContent=out.length
+  ? `Exact scope only: screenshot ${scope.backDate} (${scope.tf}) → Excel ${scope.excelDate}, ${scope.shift}; ${out.length} Moderator names read from ${found.sheet}.`
+  : `Found Excel date ${scope.excelDate} in ${found.sheet}, but no names in ${scope.shift}. No other date/shift was checked.`;
 }
 $('backDate').addEventListener('change',extractScopedExcel);
 $('timeFrame').addEventListener('change',extractScopedExcel);
