@@ -1,1 +1,113 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SAWA Checkers</title><style>*{box-sizing:border-box}body{margin:0;font:15px Arial,sans-serif;background:#f3f6fb;color:#172033}.head{padding:20px max(16px,calc((100% - 1100px)/2));background:#fff;border-bottom:1px solid #dce3ef}.head h1{margin:0 0 5px;font-size:23px}.head p{margin:0;color:#65738a}.tabs{display:flex;gap:10px;max-width:1100px;margin:18px auto 0;padding:0 14px}.tabs button{border:1px solid #d6dfec;border-radius:12px;padding:13px 20px;background:#fff;font-weight:700;cursor:pointer}.tabs button.active{background:#183d72;color:white;border-color:#183d72}.pane{max-width:1100px;margin:12px auto;padding:0 14px 22px}.pane iframe{width:100%;height:calc(100vh - 170px);min-height:650px;border:0;background:white;border-radius:12px}.hidden{display:none!important}.note{padding:12px 14px;background:#fff8dc;border:1px solid #f0df9a;border-radius:10px;margin:10px 0;color:#634f16}@media(max-width:600px){.tabs button{flex:1;padding:12px 8px}.head h1{font-size:20px}.pane iframe{height:calc(100vh - 180px);min-height:700px}}</style></head><body><header class="head"><h1>SAWA Schedule Checker</h1><p>Choose the checker you want to use.</p></header><nav class="tabs"><button id="weeklyTab" class="active" onclick="showTab('weekly')">Weekly Checker</button><button id="dailyTab" onclick="showTab('daily')">Daily Checker</button></nav><main><section id="weeklyPane" class="pane"><div class="note">Weekly Checker is loaded from its separate, preserved file.</div><iframe title="Weekly Checker" src="weekly/index.html"></iframe></section><section id="dailyPane" class="pane hidden"><iframe title="Daily Checker" src="daily/index.html"></iframe></section></main><script>function showTab(which){document.getElementById('weeklyPane').classList.toggle('hidden',which!=='weekly');document.getElementById('dailyPane').classList.toggle('hidden',which!=='daily');document.getElementById('weeklyTab').classList.toggle('active',which==='weekly');document.getElementById('dailyTab').classList.toggle('active',which==='daily')}</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Weekly Schedule Checker</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{font-family:Arial,sans-serif;color:#172033;background:#f5f7fb}*{box-sizing:border-box}body{margin:0}.wrap{max-width:1050px;margin:auto;padding:18px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px}.top h1{margin:0;font-size:22px}.sub{color:#64748b;font-size:13px}.box{background:white;border:1px solid #e3e8f0;border-radius:14px;padding:15px;margin:12px 0;box-shadow:0 2px 10px #00000008}.drop{border:2px dashed #b9c4d5;border-radius:12px;padding:22px;text-align:center;background:#fafcff}.btn{border:0;border-radius:9px;padding:11px 15px;font-weight:700;cursor:pointer}.primary{background:#1769e0;color:#fff}.secondary{background:#edf2f7;color:#172033}.danger{background:#fee2e2;color:#991b1b}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:700px){.grid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
+label{font-weight:700;font-size:13px;display:block;margin-bottom:6px}input[type=file],textarea{width:100%;border:1px solid #cbd5e1;border-radius:9px;padding:10px;background:white}textarea{min-height:80px;resize:vertical}.hint{font-size:12px;color:#64748b;margin-top:6px}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}@media(max-width:700px){.summary{grid-template-columns:repeat(2,1fr)}}.stat{padding:12px;border-radius:11px;background:#f8fafc;border:1px solid #e5e7eb}.stat b{display:block;font-size:22px}.ok{color:#15803d}.bad{color:#b91c1c}.warn{color:#b45309}.result{padding:12px;border-radius:10px;margin:8px 0;border-left:5px solid}.result h3{margin:0 0 6px;font-size:15px}.result p{margin:4px 0;font-size:13px}.rbad{background:#fff1f2;border-color:#ef4444}.rwarn{background:#fffbeb;border-color:#f59e0b}.rok{background:#f0fdf4;border-color:#22c55e}.tag{display:inline-block;padding:3px 7px;border-radius:99px;background:#e5e7eb;margin:2px;font-size:12px}.small{font-size:12px;color:#64748b}.hidden{display:none}.fileName{font-weight:700;margin-top:8px}.footer{font-size:11px;color:#94a3b8;text-align:center;margin:20px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><div><h1>Weekly Schedule Checker</h1><div class="sub">Upload the Excel schedule and check conflicts automatically.</div></div><button class="btn secondary" id="clearBtn">Clear</button></div>
+
+  <div class="box">
+    <div class="drop">
+      <label for="file">Excel file (.xlsx)</label>
+      <input id="file" type="file" accept=".xlsx,.xls" />
+      <div id="fileName" class="fileName"></div>
+      <div class="hint">The checker does not modify your Excel file. Everything is checked in your browser.</div>
+    </div>
+  </div>
+
+  <div id="previousBox" class="box hidden">
+    <h3 style="margin-top:0">Previous Day — OV only</h3>
+    <div class="sub">Optional. Enter the people who worked OV on the day before the first day in the Excel. They will be checked against the first day's AM.</div>
+    <div class="grid" style="margin-top:12px">
+      <div><label>Moderators — Previous OV</label><textarea id="prevMod" placeholder="Example: Ahmad, Iman, Esraa"></textarea></div>
+      <div><label>Backup Team — Previous OV</label><textarea id="prevBackup" placeholder="Example: Abed, Doaa, May"></textarea></div>
+    </div>
+  </div>
+
+  <div id="actions" class="box hidden"><button class="btn primary" id="checkBtn">Check Schedule</button> <button class="btn secondary" id="downloadBtn">Download Report</button></div>
+
+  <div id="report" class="hidden">
+    <div class="box"><div id="fileInfo" class="sub"></div><div class="summary" style="margin-top:10px"><div class="stat"><span>Total issues</span><b id="total">0</b></div><div class="stat"><span>OV → AM</span><b id="ovam">0</b></div><div class="stat"><span>Same day duplicate</span><b id="dup">0</b></div><div class="stat"><span>Work + Vacation</span><b id="vac">0</b></div></div></div>
+    <div class="box"><h3 style="margin-top:0">Results</h3><div id="results"></div></div>
+  </div>
+  <div class="footer">Works as a static website — ready for GitHub Pages or Cloudflare Pages.</div>
+</div>
+<script>
+let workbook=null, parsed=null, issues=[];
+const DAY_NAMES=['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+const NORMAL={am:'AM',pm:'PM',ov:'OV',rest:'REST',off:'OFF',vacation:'VACATION',maternity:'MATERNITY',other:'OTHER',others:'OTHER',split:'SPLIT'};
+function norm(v){return String(v??'').trim().replace(/\s+/g,' ')}
+function key(v){return norm(v).toLowerCase()}
+function cleanName(v){return norm(v).replace(/^[-•]+\s*/,'')}
+function dayFrom(v){let s=key(v).replace(/[^a-z]/g,''); return DAY_NAMES.includes(s)?s:null}
+function statusFrom(v){let s=key(v).replace(/[^a-z]/g,''); if(s==='0v')s='ov'; return NORMAL[s]||null}
+function sheetRows(ws){return XLSX.utils.sheet_to_json(ws,{header:1,defval:null,raw:true})}
+function findDayStarts(rows){let starts=[]; for(let c=0;c<(rows[1]?.length||0);c++){let d=dayFrom(rows[1]?.[c]); if(d) starts.push({day:d,col:c});} return starts}
+function extractTeam(ws,team){
+ const rows=sheetRows(ws); const starts=findDayStarts(rows); if(!starts.length) throw new Error('Could not find Monday-Sunday headers in '+ws.name);
+ const shiftRows={};
+ for(let r=0;r<Math.min(rows.length,30);r++){let st=statusFrom(rows[r]?.[0]); if(st && !shiftRows[st]) shiftRows[st]=[]; if(st) shiftRows[st].push(r)}
+ const wanted=team==='moderator'?['AM','PM','OV','REST','VACATION','MATERNITY','OTHER']:['AM','PM','SPLIT','OV','OFF','VACATION','OTHER'];
+ let days=[];
+ starts.forEach((st,i)=>{
+   let end=(starts[i+1]?.col??rows[1].length)-1; const d={day:st.day, columns:[st.col+1,end+1], people:{}};
+   wanted.forEach(status=>{
+     const rs=shiftRows[status]||[];
+     rs.forEach(r=>{for(let c=st.col;c<=end;c++){let n=cleanName(rows[r]?.[c]); if(!n || key(n)===key(status)) continue; if(!d.people[key(n)]) d.people[key(n)]={name:n,statuses:{}}; if(!d.people[key(n)].statuses[status]) d.people[key(n)].statuses[status]=[]; d.people[key(n)].statuses[status].push({row:r+1,col:c+1});}});
+   });
+   days.push(d);
+ });
+ return {team,sheet:ws.name,days};
+}
+function firstDayName(){return parsed?.moderator?.days?.[0]?.day||parsed?.backup?.days?.[0]?.day||''}
+function parseWorkbook(wb){
+ const mod=wb.Sheets['MODERATORS WEEK 1']||wb.Sheets[wb.SheetNames.find(s=>/moderator/i.test(s))];
+ const back=wb.Sheets['BACKUPTEAM WEEK 1']||wb.Sheets[wb.SheetNames.find(s=>/backup/i.test(s))];
+ if(!mod && !back) throw new Error('Could not find a Moderators or Backup Team sheet.');
+ return {moderator:mod?extractTeam(mod,'moderator'):null,backup:back?extractTeam(back,'backup'):null};
+}
+function addIssue(type,team,day,name,detail){issues.push({type,team,day,name,detail})}
+function checkTeam(teamData,prevText){
+ if(!teamData)return;
+ teamData.days.forEach((d,idx)=>{
+   Object.values(d.people).forEach(p=>{
+     const statuses=Object.keys(p.statuses);
+     const work=statuses.filter(s=>['AM','PM','OV','SPLIT'].includes(s));
+     const hasVacation=statuses.includes('VACATION');
+     if(statuses.length>1){
+       if(hasVacation && work.length) addIssue('vacation',teamData.team,d.day,p.name,work.join(' + ')+' + VACATION');
+       else if(statuses.length>1) addIssue('duplicate',teamData.team,d.day,p.name,statuses.join(' + '));
+     }
+   });
+ });
+ const prev=prevText.split(/[,\n]+/).map(cleanName).filter(Boolean);
+ if(prev.length && teamData.days[0]){
+   const am=teamData.days[0].people; prev.forEach(name=>{const p=am[key(name)]; if(p?.statuses?.AM) addIssue('ovam',teamData.team,teamData.days[0].day,name,'Previous Day OV → '+teamData.days[0].day+' AM');});
+ }
+}
+function runCheck(){
+ issues=[]; checkTeam(parsed.moderator,document.getElementById('prevMod').value); checkTeam(parsed.backup,document.getElementById('prevBackup').value); renderReport();
+}
+function labelTeam(t){return t==='moderator'?'Moderators':'Backup Team'}
+function renderReport(){
+ document.getElementById('total').textContent=issues.length; document.getElementById('ovam').textContent=issues.filter(x=>x.type==='ovam').length; document.getElementById('dup').textContent=issues.filter(x=>x.type==='duplicate').length; document.getElementById('vac').textContent=issues.filter(x=>x.type==='vacation').length;
+ const el=document.getElementById('results');
+ if(!issues.length){el.innerHTML='<div class="result rok"><h3>✓ No conflicts found</h3><p>The uploaded schedule passed the three checks.</p></div>'; return;}
+ const order={ovam:0,duplicate:1,vacation:2}; issues.sort((a,b)=>order[a.type]-order[b.type]||a.day.localeCompare(b.day)||a.name.localeCompare(b.name));
+ el.innerHTML=issues.map((x,i)=>{let title=x.type==='ovam'?'OV → AM conflict':x.type==='duplicate'?'Same-day duplicate':'Work + Vacation'; return `<div class="result ${x.type==='ovam'||x.type==='vacation'?'rbad':'rwarn'}"><h3>${i+1}. ${title}</h3><p><b>${esc(x.name)}</b> — ${esc(x.day)} — ${esc(labelTeam(x.team))}</p><p><span class="tag">${esc(x.detail)}</span></p></div>`}).join('');
+}
+function esc(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function csv(){let rows=[['Type','Team','Day','Person','Details']]; issues.forEach(x=>rows.push([x.type,labelTeam(x.team),x.day,x.name,x.detail])); return rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n')}
+document.getElementById('file').addEventListener('change',async e=>{const f=e.target.files[0]; if(!f)return; document.getElementById('fileName').textContent=f.name; try{let data=await f.arrayBuffer(); workbook=XLSX.read(data,{type:'array',cellDates:true}); parsed=parseWorkbook(workbook); document.getElementById('previousBox').classList.remove('hidden'); document.getElementById('actions').classList.remove('hidden'); document.getElementById('report').classList.add('hidden'); document.getElementById('fileInfo').textContent='First day detected: '+firstDayName().toUpperCase()+' · Sheets: '+workbook.SheetNames.join(', '); }catch(err){alert(err.message||'Could not read the Excel file.');}});
+document.getElementById('checkBtn').addEventListener('click',()=>{if(!parsed)return; runCheck(); document.getElementById('report').classList.remove('hidden');});
+document.getElementById('downloadBtn').addEventListener('click',()=>{if(!issues.length){runCheck()} let blob=new Blob([csv()],{type:'text/csv;charset=utf-8'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='schedule_check_report.csv';a.click();URL.revokeObjectURL(a.href);});
+document.getElementById('clearBtn').addEventListener('click',()=>location.reload());
+</script>
+</body></html>
