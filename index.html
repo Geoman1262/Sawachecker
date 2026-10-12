@@ -35,8 +35,7 @@ function extractScopedExcel(){
  if(!workbook)return;
  const scope=shiftScope();
  if(!scope){$('excelRows').value='';$('ocrStatus').textContent='Choose the Backoffice date and Time frame to extract only the matching Excel rows.';return;}
- // Daily Checker is MODERATOR-only. Automatically choose the MODERATORS worksheet
- // whose date headers contain the mapped Excel date; never use BACKUPTEAM.
+ // Daily Checker is MODERATOR-only. Match the exact date written above each weekday block.
  const modSheets=workbook.SheetNames.filter(n=>/^MODERATORS(?: WEEK\s*\d+)?$/i.test(n.trim()));
  const parseHeaderDate=(v,yearHint)=>{
   if(v instanceof Date&&!isNaN(v))return `${v.getUTCFullYear()}-${String(v.getUTCMonth()+1).padStart(2,'0')}-${String(v.getUTCDate()).padStart(2,'0')}`;
@@ -45,49 +44,32 @@ function extractScopedExcel(){
   if(m){const mo=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(m[2].toLowerCase());let y=m[3]?+m[3]:+(String(yearHint||'').slice(0,4));if(y<100)y+=2000;if(mo>=0&&y)return `${y}-${String(mo+1).padStart(2,'0')}-${String(+m[1]).padStart(2,'0')}`;}
   return '';
  };
- let chosenSheet='';
- for(const sn of modSheets){const sw=workbook.Sheets[sn];if(!sw||!sw['!ref'])continue;const rr=XLSX.utils.decode_range(sw['!ref']);for(let c=0;c<=rr.e.c;c++){const hd=sw[XLSX.utils.encode_cell({r:0,c})]?.v;if(parseHeaderDate(hd,scope.excelDate)===scope.excelDate){chosenSheet=sn;break;}}if(chosenSheet)break;}
- if(chosenSheet)$('sheetSelect').value=chosenSheet;
- else if(modSheets.length===1){$('sheetSelect').value=modSheets[0];}
- const selectedName=$('sheetSelect').value;
- if(!/^MODERATORS(?: WEEK\s*\d+)?$/i.test(selectedName.trim())){ $('excelRows').value=''; $('ocrStatus').textContent='Daily Checker checks MODERATOR worksheets only. Choose a MODERATORS worksheet.';return;}
- const ws=workbook.Sheets[selectedName];
- if(!ws)return;
- const range=XLSX.utils.decode_range(ws['!ref']||'A1:A1');
  const dayNames=['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
- const shiftAliases={'am':'AM','pm':'PM','ov':'OV','0v':'OV','rest':'REST','off':'REST','vacation':'VACATION','maternity':'MATERNITY','other':'OTHER','others':'OTHER','split':'SPLIT','split (8pm-4am)':'SPLIT','missions':'MISSIONS','mission':'MISSIONS'};
  const normCell=v=>String(v??'').replace(/\s+/g,' ').trim().toLowerCase();
  const cleanCell=v=>String(v??'').replace(/\s+/g,' ').trim();
- function excelDateCell(v){
-  if(v instanceof Date&&!isNaN(v))return new Date(Date.UTC(v.getUTCFullYear(),v.getUTCMonth(),v.getUTCDate()));
-  if(typeof v==='number'){const d=XLSX.SSF.parse_date_code(v);if(d)return new Date(Date.UTC(d.y,d.m-1,d.d));}
-  const x=String(v??'').trim();let m=x.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{2,4})$/);if(m){let y=+m[3];if(y<100)y+=2000;return new Date(Date.UTC(y,+m[2]-1,+m[1]));}
-  m=x.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);if(m)return new Date(Date.UTC(+m[1],+m[2]-1,+m[3]));
-  m=x.match(/^(\d{1,2})[- ]([A-Za-z]{3})[- ](\d{2,4})$/);if(m){let mo=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(m[2].toLowerCase());let y=+m[3];if(y<100)y+=2000;if(mo>=0)return new Date(Date.UTC(y,mo,+m[1]));}
-  // SAWA headers commonly display dates like "12-Oct" without a year.
-  // Infer the year from the selected Excel scope, so 12-Oct resolves to 2026-10-12 when appropriate.
-  m=x.match(/^(\d{1,2})[- ]([A-Za-z]{3})$/);if(m){let mo=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(m[2].toLowerCase());let y=Number(String(scope.excelDate||'').slice(0,4));if(mo>=0&&y)return new Date(Date.UTC(y,mo,+m[1]));}
-  m=x.match(/^([A-Za-z]{3})[- ](\d{1,2})$/);if(m){let mo=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(m[1].toLowerCase());let y=Number(String(scope.excelDate||'').slice(0,4));if(mo>=0&&y)return new Date(Date.UTC(y,mo,+m[2]));}
-  return null;
- }
+ const shiftAliases={'am':'AM','pm':'PM','ov':'OV','0v':'OV','rest':'REST','off':'REST','vacation':'VACATION','maternity':'MATERNITY','other':'OTHER','others':'OTHER','split':'SPLIT','split (8pm-4am)':'SPLIT','missions':'MISSIONS','mission':'MISSIONS'};
  const dateISO=d=>d?`${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`:'';
- // SAWA workbook layout: weekday headers are in row 2, dates in row 1,
- // and the shift label is in column A. This follows the same layout logic as Weekly.
- const starts=[];
- for(let c=0;c<=range.e.c;c++){const day=normCell(ws[XLSX.utils.encode_cell({r:1,c})]?.v);if(dayNames.includes(day))starts.push({day,col:c});}
- if(!starts.length){$('excelRows').value='';$('ocrStatus').textContent='Could not find weekday headers in row 2 of the selected worksheet. Choose the correct MODERATORS WEEK or BACKUPTEAM worksheet.';return;}
- let firstDate=null;
- for(let c=starts[0].col;c<=range.e.c&&!firstDate;c++)firstDate=excelDateCell(ws[XLSX.utils.encode_cell({r:0,c})]?.v);
- if(!firstDate){$('excelRows').value='';$('ocrStatus').textContent='Could not read the starting date from row 1 of this worksheet. No Excel rows were selected.';return;}
- const firstDayIndex=dayNames.indexOf(starts[0].day);
- const targetDate=new Date(scope.excelDate+'T00:00:00Z');
- let chosen=null;
- for(let i=0;i<starts.length;i++){
-  const d=new Date(firstDate.getTime());d.setUTCDate(d.getUTCDate()+dayNames.indexOf(starts[i].day)-firstDayIndex);
-  const end=i+1<starts.length?starts[i+1].col-1:range.e.c;
-  if(dateISO(d)===scope.excelDate){chosen={...starts[i],end,date:d};break;}
+ let chosenSheet='',chosen=null;
+ // Only look at the moderator worksheet date cells aligned with weekday-block starts.
+ for(const sn of modSheets){
+  const sw=workbook.Sheets[sn];if(!sw||!sw['!ref'])continue;
+  const rr=XLSX.utils.decode_range(sw['!ref']);
+  const starts=[];
+  for(let c=0;c<=rr.e.c;c++){const day=normCell(sw[XLSX.utils.encode_cell({r:1,c})]?.v);if(dayNames.includes(day))starts.push({day,col:c});}
+  for(let i=0;i<starts.length;i++){
+   const header=sw[XLSX.utils.encode_cell({r:0,c:starts[i].col})]?.v;
+   if(parseHeaderDate(header,scope.excelDate)===scope.excelDate){
+    chosenSheet=sn;const end=i+1<starts.length?starts[i+1].col-1:rr.e.c;chosen={...starts[i],end};break;
+   }
+  }
+  if(chosen)break;
  }
- if(!chosen){$('excelRows').value='';$('ocrStatus').textContent=`The selected worksheet does not contain ${scope.excelDate}. SAWA headers such as 12-Oct are interpreted using the selected scope year. Select the correct week worksheet. No other dates were scanned.`;return;}
+ if(!chosen){$('excelRows').value='';$('ocrStatus').textContent=`No MODERATORS day block has the exact Excel date ${scope.excelDate}. For Morning, this must be the previous date (OV). No other date or shift was used.`;return;}
+ $('sheetSelect').value=chosenSheet;
+ const selectedName=chosenSheet;
+ const ws=workbook.Sheets[selectedName];
+ if(!ws){$('excelRows').value='';$('ocrStatus').textContent='Could not open the matching MODERATORS worksheet.';return;}
+ const range=XLSX.utils.decode_range(ws['!ref']||'A1:A1');
  let currentShift='';const out=[];const seen=new Set();
  for(let r=2;r<=Math.min(range.e.r,14);r++){
   const label=shiftAliases[normCell(ws[XLSX.utils.encode_cell({r,c:0})]?.v)];
@@ -103,7 +85,7 @@ function extractScopedExcel(){
   }
  }
  $('excelRows').value=out.join('\n');
- if(out.length){$('ocrStatus').textContent=`Automatically extracted ${out.length} Excel rows for ${scope.excelDate} / ${scope.shift} from ${$('sheetSelect').value}. Other dates and shifts were not included.`;}
+ if(out.length){$('ocrStatus').textContent=`Correctly mapped ${scope.tf}: Backoffice ${scope.backDate} → Excel ${scope.excelDate}, ${scope.shift}. Extracted ${out.length} Moderator rows from ${$('sheetSelect').value}; no other dates/shifts included.`;}
  else{$('ocrStatus').textContent=`No names found for ${scope.excelDate} / ${scope.shift} in this worksheet. Check the selected worksheet and its shift labels; no other dates or shifts were included.`;}
 }
 $('backDate').addEventListener('change',extractScopedExcel);
