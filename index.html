@@ -131,38 +131,42 @@ function parseExcel(){return $('excelRows').value.split(/\r?\n/).map(x=>x.trim()
 function keyName(s){return String(s??'').normalize('NFKC').toLocaleLowerCase().replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g,'').replace(/[أإآٱ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/[ؤ]/g,'و').replace(/[ئ]/g,'ي').replace(/[._,'’`-]/g,' ').replace(/[^\p{L}\p{N} ]/gu,' ').replace(/\s+/g,' ').trim()} 
 function nameTokens(s){return keyName(s).split(' ').filter(Boolean)}
 function firstNameKey(s){return nameTokens(s)[0]||''}
-// Explicit aliases confirmed for this SAWA workflow. These are applied before fuzzy matching.
-const NAME_ALIASES = [
- ['amiraaa','amira'], ['اميره رمضان','amira r'], ['اميرة رمضان','amira r'], ['mustafa','moustafa'],
- ['nabila elbassuny','nabila'], ['samah maher','samah'], ['naglaa samir','naglaa'],
- ['marwa sabry','marwa'], ['rita rj','rita'], ['alaa atef','alaa'],
- ['ezzedine h','ezaldeen'], ['asmaa mo','asma mo'], ['وائل','wael'],
- ['بلاغات','reports'], ['مراجعة البلاغات','reports'], ['مراجعه البلاغات','reports'],
- ['مراجعة صوت الغرفة','rooms'], ['مراجعه صوت الغرفه','rooms'],
- ['information review مراجعة الفيديو','videos information review'],
- ['مراجعة الفيديو information review','videos information review'],
- ['مراجعة الفيديو','videos information review']
+// Explicit person aliases. Canonicalization is symmetric: either spelling resolves to one key.
+const PERSON_ALIAS_GROUPS = [
+ ['amiraaa','amira'],
+ ['اميره رمضان','اميرة رمضان','amira r','amira r.'],
+ ['mustafa','moustafa'],
+ ['nabila','nabila elbassuny'],
+ ['samah','samah maher'],
+ ['naglaa','naglaa samir'],
+ ['marwa','marwa sabry'],
+ ['rita','rita rj'],
+ ['alaa','alaa atef'],
+ ['ezaldeen','ezzedine h'],
+ ['asma mo','asmaa mo'],
+ ['wael','وائل']
 ];
-function canonicalName(s){
- const k=keyName(s);
- for(const [alias,canonical] of NAME_ALIASES){
-  const a=keyName(alias), c=keyName(canonical);
-  if(k===a || k===c) return c;
- }
- return k;
+const PERSON_CANONICAL = new Map();
+for (const group of PERSON_ALIAS_GROUPS) {
+ const canonical = keyName(group[group.length-1]);
+ for (const item of group) PERSON_CANONICAL.set(keyName(item), canonical);
 }
+function canonicalName(s){const k=keyName(s);return PERSON_CANONICAL.get(k)||k;}
 function samePersonName(a,b){
  const ka=keyName(a), kb=keyName(b);
  if(!ka||!kb)return false;
- if(ka===kb||canonicalName(ka)===canonicalName(kb))return true;
- // Strip common title/parenthesis noise, then allow a unique short/full-name relationship.
- const strip=x=>keyName(x).replace(/[()]/g,' ').replace(/\s+/g,' ').trim();
- const sa=strip(a), sb=strip(b);
- if(sa===sb)return true;
- const A=nameTokens(sa), B=nameTokens(sb);
- if(!A.length||!B.length)return false;
+ if(ka===kb || canonicalName(a)===canonicalName(b))return true;
+ // Accept unique short/full-name matches only when the shorter name is a complete token.
+ const A=nameTokens(a), B=nameTokens(b);
  const shorter=A.length<=B.length?A:B, longer=A.length<=B.length?B:A;
- return shorter.length===1 && shorter[0]===longer[0];
+ if(shorter.length===1 && shorter[0]===longer[0]) {
+  const shortName=A.length<=B.length?a:b;
+  const shortKey=keyName(shortName);
+  const backCount=arguments.length>2?arguments[2].filter(x=>firstNameKey(x.name)===shortKey).length:1;
+  const excelCount=arguments.length>3?arguments[3].filter(x=>firstNameKey(x.name)===shortKey).length:1;
+  return backCount===1 && excelCount===1;
+ }
+ return false;
 }
 function tokenSimilarity(a,b){
  const A=nameTokens(a), B=nameTokens(b); if(!A.length||!B.length)return 0;
@@ -211,7 +215,7 @@ $('compareBtn').onclick=()=>{
  // Apply confirmed aliases first, then exact/saved/unique safe matches. Missing reports are generated only after this pass.
  const nameDecisions=[];
  back.forEach((b,bi)=>{
-  let idx=excel.findIndex((e,i)=>!usedExcel.has(i)&&(samePersonName(b.name,e.name)||samePersonName(mappedExcelName(b.name),e.name)));
+  let idx=excel.findIndex((e,i)=>!usedExcel.has(i)&&(samePersonName(b.name,e.name,back,excel)||samePersonName(mappedExcelName(b.name),e.name,back,excel)));
   let method=idx>=0?'exact-or-saved':'none';
   if(idx<0){
    const candidates=excel.map((e,i)=>({e,i,m:autoNameMatch(b.name,e.name,back,excel)})).filter(x=>!usedExcel.has(x.i)&&x.m.matched);
@@ -233,14 +237,9 @@ $('compareBtn').onclick=()=>{
 function cleanTask(s){
  const raw=String(s??'').normalize('NFKC').replace(/\s+/g,' ').trim();
  const k=keyName(raw);
- const aliases={
-  'reports':'reports','report':'reports','بلاغات':'reports','مراجعه البلاغات':'reports',
-  'rooms':'rooms','مراجعه صوت الغرفه':'rooms',
-  'videos information r':'videos information review','videos information review':'videos information review',
-  'information review مراجعه الفيديو':'videos information review','مراجعه الفيديو information review':'videos information review','مراجعه الفيديو':'videos information review'
- };
- if(aliases[k])return aliases[k];
- if(k.includes('information review')&&k.includes('مراجعة الفيديو'))return 'videos information review';
+ if(['reports','report','بلاغات','مراجعه البلاغات','مراجعة البلاغات'].map(keyName).includes(k))return 'reports';
+ if(['rooms','مراجعه صوت الغرفه','مراجعة صوت الغرفة','مراجعة صوت الغرفه'].map(keyName).includes(k))return 'rooms';
+ if(k.includes('videos information r') || k==='videos information review' || (k.includes('information review') && k.includes('مراجعه الفيديو')) || k==='مراجعه الفيديو' || k==='مراجعة الفيديو')return 'videos information review';
  return k;
 }
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
