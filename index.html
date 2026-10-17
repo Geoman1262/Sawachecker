@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>SAWA Schedule Checker — Simple Daily Flow</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>SAWA Schedule Checker — Daily Rebuild Phase 1</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f4f7fb;color:#172033;font-family:Arial,sans-serif}.top{background:#fff;padding:24px 26px;border-bottom:1px solid #dce3ed}.top h1{margin:0 0 8px;font-size:30px}.top p{margin:0;color:#68758a;font-size:17px}.tabs{display:flex;gap:12px;padding:22px 24px 0}.tab{flex:1;border:1px solid #d7e0ec;background:white;border-radius:18px;padding:18px 10px;font-weight:700;font-size:18px;cursor:pointer}.tab.active{background:#1b4176;color:white}.notice{margin:16px 24px;background:#fff7d9;border:1px solid #efdfa1;border-radius:15px;padding:16px 20px;color:#655626;font-size:16px}.panel{margin:0 24px 28px;background:white;border-radius:20px;padding:22px;box-shadow:0 4px 18px #1720330b}.hidden{display:none!important}iframe{display:block;width:100%;height:calc(100vh - 220px);min-height:760px;border:0;background:white;border-radius:16px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.field{margin-bottom:16px}.field label{display:block;font-weight:700;margin-bottom:8px}.field input,.field select,.field textarea{width:100%;border:1px solid #cfd8e5;border-radius:12px;padding:12px;font:inherit;background:white}.field textarea{min-height:150px}.btn{border:0;border-radius:12px;background:#1b4176;color:#fff;padding:13px 18px;font-weight:700;font-size:16px;cursor:pointer}.btn.secondary{background:#e8eef7;color:#1b4176}.btn:disabled{opacity:.5}.hint{color:#69768a;font-size:14px;line-height:1.5}.badge{display:inline-block;padding:5px 9px;border-radius:999px;font-weight:700;font-size:12px;background:#e7f0ff;color:#2457a4}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0}.stat{border:1px solid #e1e7ef;border-radius:12px;padding:13px}.stat strong{display:block;font-size:24px;margin-bottom:5px}.table-wrap{overflow:auto;margin-top:14px}table{border-collapse:collapse;width:100%;min-width:900px}th,td{text-align:left;padding:12px;border:1px solid #e0e6ee;vertical-align:top}th{background:#f0f4fa}.ok{color:#147544;font-weight:700}.bad{color:#b42336;font-weight:700}.warn{color:#986100;font-weight:700}.small{font-size:13px}.checkrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}@media(max-width:650px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.top h1{font-size:25px}.tabs{padding-left:12px;padding-right:12px}.panel,.notice{margin-left:12px;margin-right:12px}.panel{padding:15px}}
@@ -13,10 +13,10 @@
 /* Workflow simplification: keep optional name mapping collapsed until needed. */
 .advanced-matches{padding:0!important;overflow:hidden}.advanced-matches details>summary{display:flex;align-items:center;gap:12px;cursor:pointer;list-style:none;padding:16px;border-radius:14px;background:#eef4fc;color:#1b4176}.advanced-matches details>summary::-webkit-details-marker{display:none}.advanced-matches details>summary strong{display:block;font-size:17px}.advanced-matches details>summary small{display:block;margin-top:4px;color:#596a80;font-size:13px;font-weight:400}.details-body{padding:16px;border-top:1px solid #dce5f0}.step-panel{scroll-margin-top:15px}.step-panel h2{line-height:1.25}.btn{min-height:48px}.hint{line-height:1.45}
 </style></head><body>
-<header class="top"><div class="brandline"><div><h1>SAWA Schedule Checker</h1><p>Easy daily check — upload two sources, review, compare.</p></div><span class="version-pill">DAILY • SIMPLIFIED</span></div></header>
+<header class="top"><div class="brandline"><div><h1>SAWA Schedule Checker</h1><p>Easy daily check — upload two sources, review, compare.</p></div><span class="version-pill">DAILY • REBUILD PHASE 1</span></div></header>
 <nav class="tabs"><button class="tab active" id="weeklyTab">Weekly Checker</button><button class="tab" id="dailyTab">Daily Checker</button></nav>
 <div id="weeklyView"><div class="notice">Weekly Checker is embedded from the preserved source. Daily features are separate.</div><div class="panel" style="padding:8px"><iframe id="weeklyFrame" title="Weekly Checker"></iframe></div></div>
-<div id="dailyView" class="hidden"><div class="hero"><div><div class="eyebrow">DAILY CHECKER · OCR ROW PARSER FIX V4</div><h2>Compare Backoffice with Excel</h2><p>Just follow the steps below. Names are normalized automatically, including confirmed Arabic/English aliases; uncertain matches are flagged for review.</p></div><div class="flow"><span>1 Upload</span><b>›</b><span>2 Review</span><b>›</b><span>3 Match names</span><b>›</b><span>4 Compare</span></div></div><div class="notice"><b>Automatic date mapping:</b> Morning → previous Excel date / OV · Overnight → same date / PM · Midshift → same date / AM. Weekly Checker remains separate.</div>
+<div id="dailyView" class="hidden"><div class="hero"><div><div class="eyebrow">DAILY CHECKER · REBUILD PHASE 1</div><h2>Compare Backoffice with Excel</h2><p>Just follow the steps below. Names are normalized automatically, including confirmed Arabic/English aliases; uncertain matches are flagged for review.</p></div><div class="flow"><span>1 Upload</span><b>›</b><span>2 Review</span><b>›</b><span>3 Match names</span><b>›</b><span>4 Compare</span></div></div><div class="notice"><b>Automatic date mapping:</b> Morning → previous Excel date / OV · Overnight → same date / PM · Midshift → same date / AM. Weekly Checker remains separate.</div>
 <section class="panel step-panel"><div class="step-title"><span class="step-number">1</span><div><h2>Upload your files</h2><p>Choose the schedule Excel and the Backoffice screenshot.</p></div></div><div class="grid"><div class="field"><label for="excelFile">Weekly Excel file (Moderator schedule only)</label><input id="excelFile" type="file" accept=".xlsx,.xls,.xlsm"><div class="hint">The checker reads the selected date scope only; it does not run weekly conflict checks.</div></div><div class="field"><label for="screenshots">Backoffice screenshot(s)</label><input id="screenshots" type="file" accept="image/*" multiple><div class="hint">The app reads the screenshot and prepares rows automatically; review only if OCR misread something.</div></div></div><div class="field"><label for="sheetSelect">Excel worksheet</label><select id="sheetSelect" disabled><option>Upload Excel first</option></select></div>
 <div class="grid"><div class="field"><label for="backDate">Backoffice screenshot date</label><input id="backDate" type="date"></div><div class="field"><label for="timeFrame">Time frame</label><select id="timeFrame"><option value="Morning">Morning</option><option value="Overnight">Overnight</option><option value="Midshift">Midshift</option></select></div></div><div class="checkrow"><button class="btn" id="readImages">Read screenshot(s)</button><span id="ocrStatus" class="hint">No screenshot read yet.</span></div><div class="field"><label for="ocrText">Extracted text — review and correct before comparison</label><textarea id="ocrText" placeholder="OCR output will appear here. You can edit it manually if needed."></textarea></div>
 </section>
@@ -124,7 +124,7 @@ function prepareBackofficeRows(){
  const dedup=[],seen=new Set();for(const row of out){const k=row.toLowerCase();if(!seen.has(k)){seen.add(k);dedup.push(row)}}
  $('backRows').value=dedup.join('\n');
  if(!dedup.length){$('ocrStatus').textContent='OCR text was read, but no table rows were detected. Correct/paste rows as Name | Moderation content, then press Prepare again.'}
- else {$('ocrStatus').textContent=`Prepared ${dedup.length} Backoffice rows (including Arabic/English names where OCR detects them). Review the prepared list above before comparing; names not present here cannot be matched.`}
+ else {$('ocrStatus').textContent=`Prepared ${dedup.length} Backoffice rows. IMPORTANT: compare this count with the visible people in the screenshot; any name OCR missed must be corrected in Backoffice rows before comparing. Names absent from the extracted table cannot be matched.`}
 }
 $('prepareRows').onclick=prepareBackofficeRows;
 function parseBack(){return $('backRows').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).map(line=>{let p=line.split('|');return {name:(p[0]||'').trim(),task:(p.slice(1).join('|')||'').trim()}}).filter(x=>x.name)}
@@ -135,7 +135,7 @@ function firstNameKey(s){return nameTokens(s)[0]||''}
 // Explicit person aliases. Canonicalization is symmetric: either spelling resolves to one key.
 const PERSON_ALIAS_GROUPS = [
  ['amiraaa','amira'],
- ['اميره رمضان','اميرة رمضان','amira r','amira r.'],
+ ['اميرة رمضان','اميره رمضان','amira r','amira r.'],
  ['mustafa','moustafa'],
  ['nabila','nabila elbassuny'],
  ['samah','samah maher'],
@@ -149,7 +149,8 @@ const PERSON_ALIAS_GROUPS = [
 ];
 const PERSON_CANONICAL = new Map();
 for (const group of PERSON_ALIAS_GROUPS) {
- const canonical = keyName(group[group.length-1]);
+ // The first entry is the stable canonical key; aliases are symmetric.
+ const canonical = keyName(group[0]);
  for (const item of group) PERSON_CANONICAL.set(keyName(item), canonical);
 }
 function canonicalName(s){const k=keyName(s);return PERSON_CANONICAL.get(k)||k;}
@@ -213,9 +214,31 @@ $('compareBtn').onclick=()=>{
  if(!excel.length){$('report').innerHTML='<p class="bad">Excel extraction returned 0 rows for the required scope. Check the selected Moderator sheet/date/shift.</p>';return}
  if(!back.length){$('report').innerHTML='<p class="bad">Excel extraction found '+excel.length+' rows for '+s.excelDate+' / '+s.shift+', but no valid Backoffice rows were prepared. Review OCR and prepare Backoffice rows before comparison.</p>';return}
  const usedBack=new Set(),usedExcel=new Set(),groups={match:[],taskMismatch:[],shiftMismatch:[],bothMismatch:[],missingBack:[],missingExcel:[]};
- // Apply confirmed aliases first, then exact/saved/unique safe matches. Missing reports are generated only after this pass.
- const nameDecisions=[];
+ // Global pass 1: reserve all exact and confirmed-alias pairs before any fuzzy/short-name match.
+ // This prevents an earlier ambiguous short name from consuming a person needed by a confirmed alias.
+ const assigned = new Map();
+ for(let bi=0;bi<back.length;bi++){
+  const b=back[bi];
+  const exactCandidates=excel.map((e,i)=>({e,i})).filter(x=>!usedExcel.has(x.i)&&keyName(b.name)===keyName(x.e.name));
+  let candidates=exactCandidates; let method='exact';
+  if(!candidates.length){
+   candidates=excel.map((e,i)=>({e,i})).filter(x=>!usedExcel.has(x.i)&&samePersonName(b.name,x.e.name,back,excel));
+   method='confirmed-alias';
+  }
+  if(candidates.length===1){assigned.set(bi,{idx:candidates[0].i,method});usedBack.add(bi);usedExcel.add(candidates[0].i);}
+ }
+ // Rebuild the used sets in a clean way from the reserved pairs, then process unresolved rows.
+ const reserved = new Map(assigned); usedBack.clear(); usedExcel.clear();
+ for(const [bi,pair] of reserved){usedBack.add(bi);usedExcel.add(pair.idx);}
+ // Every report below consumes the same matching decisions; Missing is calculated only after both passes.
  back.forEach((b,bi)=>{
+  if(reserved.has(bi)){
+   const {idx,method}=reserved.get(bi); const e=excel[idx];
+   const shiftOK=e.shift===s.shift, taskOK=cleanTask(e.task)===cleanTask(b.task);
+   const row={b:b.name,bt:b.task,e:e.name,et:e.task,status:''};
+   if(shiftOK&&taskOK){row.status='Match';groups.match.push(row)}else if(!shiftOK&&!taskOK){row.status='Shift + task mismatch';groups.bothMismatch.push(row)}else if(!shiftOK){row.status='Shift mismatch';groups.shiftMismatch.push(row)}else{row.status='Task mismatch';groups.taskMismatch.push(row)}
+   return;
+  }
   // First pass: exact normalized name, then confirmed canonical aliases, then saved aliases.
   const mappedBack=mappedExcelName(b.name);
   let idx=excel.findIndex((e,i)=>!usedExcel.has(i)&&keyName(b.name)===keyName(e.name));
