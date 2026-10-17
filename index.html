@@ -141,8 +141,30 @@ const NAME_ALIASES = [
 ];
 function canonicalName(s){
  const k=keyName(s);
- for(const pair of NAME_ALIASES){const a=keyName(pair[0]),b=keyName(pair[1]);if(k===a||k===b)return [a,b].sort()[0]}
- return k;
+ // Resolve aliases transitively so every known spelling shares one canonical key.
+ let current=k;
+ for(let pass=0;pass<NAME_ALIASES.length+1;pass++){
+  let changed=false;
+  for(const pair of NAME_ALIASES){
+   const a=keyName(pair[0]), b=keyName(pair[1]);
+   if(current===a||current===b){const next=[a,b].sort()[0];if(next!==current){current=next;changed=true}}
+  }
+  if(!changed)break;
+ }
+ return current;
+}
+function samePersonName(a,b){
+ const ka=keyName(a), kb=keyName(b);
+ if(!ka||!kb)return false;
+ if(ka===kb||canonicalName(ka)===canonicalName(kb))return true;
+ // Strip common title/parenthesis noise, then allow a unique short/full-name relationship.
+ const strip=x=>keyName(x).replace(/[()]/g,' ').replace(/\s+/g,' ').trim();
+ const sa=strip(a), sb=strip(b);
+ if(sa===sb)return true;
+ const A=nameTokens(sa), B=nameTokens(sb);
+ if(!A.length||!B.length)return false;
+ const shorter=A.length<=B.length?A:B, longer=A.length<=B.length?B:A;
+ return shorter.length===1 && shorter[0]===longer[0];
 }
 function tokenSimilarity(a,b){
  const A=nameTokens(a), B=nameTokens(b); if(!A.length||!B.length)return 0;
@@ -155,8 +177,7 @@ function tokenSimilarity(a,b){
 }
 function autoNameMatch(backName,excelName,backRows,excelRows){
  const bk=keyName(backName), ek=keyName(excelName);
- if(bk===ek)return {matched:true,method:'exact'};
- if(canonicalName(backName)===canonicalName(excelName))return {matched:true,method:'confirmed-alias'};
+ if(samePersonName(backName,excelName))return {matched:true,method:bk===ek?'exact':'confirmed-alias'};
  const saved=readNameMaps().find(x=>keyName(x.back)===bk);
  if(saved && keyName(saved.excel)===ek)return {matched:true,method:'saved'};
  // Safe automatic shortcut: a first-name match is accepted only if unique on BOTH lists.
@@ -189,10 +210,10 @@ $('compareBtn').onclick=()=>{
  if(!excel.length){$('report').innerHTML='<p class="bad">Excel extraction returned 0 rows for the required scope. Check the selected Moderator sheet/date/shift.</p>';return}
  if(!back.length){$('report').innerHTML='<p class="bad">Excel extraction found '+excel.length+' rows for '+s.excelDate+' / '+s.shift+', but no valid Backoffice rows were prepared. Review OCR and prepare Backoffice rows before comparison.</p>';return}
  const usedBack=new Set(),usedExcel=new Set(),groups={match:[],taskMismatch:[],shiftMismatch:[],bothMismatch:[],missingBack:[],missingExcel:[]};
- // Match exact names, saved aliases, or a unique first-name match. Ambiguous names are never auto-merged.
+ // Apply confirmed aliases first, then exact/saved/unique safe matches. Missing reports are generated only after this pass.
  const nameDecisions=[];
  back.forEach((b,bi)=>{
-  let idx=excel.findIndex((e,i)=>!usedExcel.has(i)&&keyName(e.name)===keyName(mappedExcelName(b.name)));
+  let idx=excel.findIndex((e,i)=>!usedExcel.has(i)&&(samePersonName(b.name,e.name)||samePersonName(mappedExcelName(b.name),e.name)));
   let method=idx>=0?'exact-or-saved':'none';
   if(idx<0){
    const candidates=excel.map((e,i)=>({e,i,m:autoNameMatch(b.name,e.name,back,excel)})).filter(x=>!usedExcel.has(x.i)&&x.m.matched);
