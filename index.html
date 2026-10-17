@@ -133,7 +133,7 @@ function nameTokens(s){return keyName(s).split(' ').filter(Boolean)}
 function firstNameKey(s){return nameTokens(s)[0]||''}
 // Explicit aliases confirmed for this SAWA workflow. These are applied before fuzzy matching.
 const NAME_ALIASES = [
- ['amiraaa','amira'], ['أميرة رمضان','amira r'],
+ ['amiraaa','amira'], ['أميرة رمضان','amira r'], ['mustafa','moustafa'],
  ['nabila elbassuny','nabila'], ['samah maher','samah'],
  ['naglaa samir','naglaa'], ['marwa sabry','marwa'], ['rita rj','rita'],
  ['alaa atef','alaa'], ['(ezzedine h)','ezaldeen'], ['ezzedine h','ezaldeen'],
@@ -215,7 +215,7 @@ function cleanTask(s){
  const raw=String(s??'').normalize('NFKC').replace(/\s+/g,' ').trim();
  const k=raw.toLocaleLowerCase().replace(/[\u064B-\u065F\u0670]/g,'').replace(/[،,.;:()]/g,' ').replace(/\s+/g,' ').trim();
  // Confirmed equivalent task labels supplied by the user.
- if(/^(reports|مراجعة البلاغات)$/.test(k))return 'reports';
+ if(/^(reports|report|مراجعة البلاغات|بلاغات)$/.test(k))return 'reports';
  if(/^(rooms|مراجعة صوت الغرفة)$/.test(k))return 'rooms';
  if(/^(videos & information r|information review\s* مراجعة الفيديو|information review مراجعة الفيديو|مراجعة الفيديو\s* information review)$/.test(k))return 'videos information review';
  // Accept common OCR punctuation/order variation for the same confirmed label.
