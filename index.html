@@ -16,7 +16,7 @@
 <header class="top"><div class="brandline"><div><h1>SAWA Schedule Checker</h1><p>Easy daily check — upload two sources, review, compare.</p></div><span class="version-pill">DAILY • SIMPLIFIED</span></div></header>
 <nav class="tabs"><button class="tab active" id="weeklyTab">Weekly Checker</button><button class="tab" id="dailyTab">Daily Checker</button></nav>
 <div id="weeklyView"><div class="notice">Weekly Checker is embedded from the preserved source. Daily features are separate.</div><div class="panel" style="padding:8px"><iframe id="weeklyFrame" title="Weekly Checker"></iframe></div></div>
-<div id="dailyView" class="hidden"><div class="hero"><div><div class="eyebrow">DAILY CHECKER</div><h2>Compare Backoffice with Excel</h2><p>Just follow the steps below. Names are matched automatically when safe; ambiguous names are never guessed.</p></div><div class="flow"><span>1 Upload</span><b>›</b><span>2 Review</span><b>›</b><span>3 Match names</span><b>›</b><span>4 Compare</span></div></div><div class="notice"><b>Automatic date mapping:</b> Morning → previous Excel date / OV · Overnight → same date / PM · Midshift → same date / AM. Weekly Checker remains separate.</div>
+<div id="dailyView" class="hidden"><div class="hero"><div><div class="eyebrow">DAILY CHECKER</div><h2>Compare Backoffice with Excel</h2><p>Just follow the steps below. Names are normalized automatically, including confirmed Arabic/English aliases; uncertain matches are flagged for review.</p></div><div class="flow"><span>1 Upload</span><b>›</b><span>2 Review</span><b>›</b><span>3 Match names</span><b>›</b><span>4 Compare</span></div></div><div class="notice"><b>Automatic date mapping:</b> Morning → previous Excel date / OV · Overnight → same date / PM · Midshift → same date / AM. Weekly Checker remains separate.</div>
 <section class="panel step-panel"><div class="step-title"><span class="step-number">1</span><div><h2>Upload your files</h2><p>Choose the schedule Excel and the Backoffice screenshot.</p></div></div><div class="grid"><div class="field"><label for="excelFile">Weekly Excel file (Moderator schedule only)</label><input id="excelFile" type="file" accept=".xlsx,.xls,.xlsm"><div class="hint">The checker reads the selected date scope only; it does not run weekly conflict checks.</div></div><div class="field"><label for="screenshots">Backoffice screenshot(s)</label><input id="screenshots" type="file" accept="image/*" multiple><div class="hint">The app reads the screenshot and prepares rows automatically; review only if OCR misread something.</div></div></div><div class="field"><label for="sheetSelect">Excel worksheet</label><select id="sheetSelect" disabled><option>Upload Excel first</option></select></div>
 <div class="grid"><div class="field"><label for="backDate">Backoffice screenshot date</label><input id="backDate" type="date"></div><div class="field"><label for="timeFrame">Time frame</label><select id="timeFrame"><option value="Morning">Morning</option><option value="Overnight">Overnight</option><option value="Midshift">Midshift</option></select></div></div><div class="checkrow"><button class="btn" id="readImages">Read screenshot(s)</button><span id="ocrStatus" class="hint">No screenshot read yet.</span></div><div class="field"><label for="ocrText">Extracted text — review and correct before comparison</label><textarea id="ocrText" placeholder="OCR output will appear here. You can edit it manually if needed."></textarea></div>
 </section>
@@ -128,30 +128,28 @@ function prepareBackofficeRows(){
 $('prepareRows').onclick=prepareBackofficeRows;
 function parseBack(){return $('backRows').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).map(line=>{let p=line.split('|');return {name:(p[0]||'').trim(),task:(p.slice(1).join('|')||'').trim()}}).filter(x=>x.name)}
 function parseExcel(){return $('excelRows').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).map(line=>{let p=line.split('|');return {name:(p[0]||'').trim(),shift:(p[1]||'').trim().toUpperCase(),task:(p.slice(2).join('|')||'').trim()}}).filter(x=>x.name)}
-function keyName(s){return String(s??'').normalize('NFKC').toLocaleLowerCase().replace(/[\u064B-\u065F\u0670]/g,'').replace(/[._,'’`-]/g,' ').replace(/[^\p{L}\p{N} ]/gu,' ').replace(/\s+/g,' ').trim()} 
+function keyName(s){return String(s??'').normalize('NFKC').toLocaleLowerCase().replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g,'').replace(/[أإآٱ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/[ؤ]/g,'و').replace(/[ئ]/g,'ي').replace(/[._,'’`-]/g,' ').replace(/[^\p{L}\p{N} ]/gu,' ').replace(/\s+/g,' ').trim()} 
 function nameTokens(s){return keyName(s).split(' ').filter(Boolean)}
 function firstNameKey(s){return nameTokens(s)[0]||''}
 // Explicit aliases confirmed for this SAWA workflow. These are applied before fuzzy matching.
 const NAME_ALIASES = [
- ['amiraaa','amira'], ['أميرة رمضان','amira r'], ['mustafa','moustafa'],
- ['nabila elbassuny','nabila'], ['samah maher','samah'],
- ['naglaa samir','naglaa'], ['marwa sabry','marwa'], ['rita rj','rita'],
- ['alaa atef','alaa'], ['(ezzedine h)','ezaldeen'], ['ezzedine h','ezaldeen'],
- ['asmaa mo','asma mo'], ['وائل','wael']
+ ['amiraaa','amira'], ['اميره رمضان','amira r'], ['اميرة رمضان','amira r'], ['mustafa','moustafa'],
+ ['nabila elbassuny','nabila'], ['samah maher','samah'], ['naglaa samir','naglaa'],
+ ['marwa sabry','marwa'], ['rita rj','rita'], ['alaa atef','alaa'],
+ ['ezzedine h','ezaldeen'], ['asmaa mo','asma mo'], ['وائل','wael'],
+ ['بلاغات','reports'], ['مراجعة البلاغات','reports'], ['مراجعه البلاغات','reports'],
+ ['مراجعة صوت الغرفة','rooms'], ['مراجعه صوت الغرفه','rooms'],
+ ['information review مراجعة الفيديو','videos information review'],
+ ['مراجعة الفيديو information review','videos information review'],
+ ['مراجعة الفيديو','videos information review']
 ];
 function canonicalName(s){
  const k=keyName(s);
- // Resolve aliases transitively so every known spelling shares one canonical key.
- let current=k;
- for(let pass=0;pass<NAME_ALIASES.length+1;pass++){
-  let changed=false;
-  for(const pair of NAME_ALIASES){
-   const a=keyName(pair[0]), b=keyName(pair[1]);
-   if(current===a||current===b){const next=[a,b].sort()[0];if(next!==current){current=next;changed=true}}
-  }
-  if(!changed)break;
+ for(const [alias,canonical] of NAME_ALIASES){
+  const a=keyName(alias), c=keyName(canonical);
+  if(k===a || k===c) return c;
  }
- return current;
+ return k;
 }
 function samePersonName(a,b){
  const ka=keyName(a), kb=keyName(b);
@@ -234,13 +232,15 @@ $('compareBtn').onclick=()=>{
 };
 function cleanTask(s){
  const raw=String(s??'').normalize('NFKC').replace(/\s+/g,' ').trim();
- const k=raw.toLocaleLowerCase().replace(/[\u064B-\u065F\u0670]/g,'').replace(/[،,.;:()]/g,' ').replace(/\s+/g,' ').trim();
- // Confirmed equivalent task labels supplied by the user.
- if(/^(reports|report|مراجعة البلاغات|بلاغات)$/.test(k))return 'reports';
- if(/^(rooms|مراجعة صوت الغرفة)$/.test(k))return 'rooms';
- if(/^(videos & information r|information review\s* مراجعة الفيديو|information review مراجعة الفيديو|مراجعة الفيديو\s* information review)$/.test(k))return 'videos information review';
- // Accept common OCR punctuation/order variation for the same confirmed label.
- if(k.includes('information review') && k.includes('مراجعة الفيديو'))return 'videos information review';
+ const k=keyName(raw);
+ const aliases={
+  'reports':'reports','report':'reports','بلاغات':'reports','مراجعه البلاغات':'reports',
+  'rooms':'rooms','مراجعه صوت الغرفه':'rooms',
+  'videos information r':'videos information review','videos information review':'videos information review',
+  'information review مراجعه الفيديو':'videos information review','مراجعه الفيديو information review':'videos information review','مراجعه الفيديو':'videos information review'
+ };
+ if(aliases[k])return aliases[k];
+ if(k.includes('information review')&&k.includes('مراجعة الفيديو'))return 'videos information review';
  return k;
 }
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
